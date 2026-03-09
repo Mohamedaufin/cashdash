@@ -31,9 +31,29 @@ jobs:
       - name: Force pod generation
         run: flutter build ios --config-only || true
 
-      - name: Force iOS 14.0 Deployment Target in Podfile
+      - name: Force iOS 14.0 and Fix BoringSSL in Podfile
         run: |
-          ruby -i -pe 'gsub(/flutter_additional_ios_build_settings\(target\)/, "flutter_additional_ios_build_settings(target)\n      target.build_configurations.each do |config|\n        config.build_settings[%q(IPHONEOS_DEPLOYMENT_TARGET)] = %q(14.0)\n      end")' ios/Podfile
+          cat << 'EOF' > fix_podfile.rb
+          podfile = File.read('ios/Podfile')
+          injection = <<-RUBY
+          flutter_additional_ios_build_settings(target)
+                target.build_configurations.each do |config|
+                  config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+                end
+                if target.name == 'BoringSSL-GRPC'
+                  target.source_build_phase.files.each do |file|
+                    if file.settings && file.settings['COMPILER_FLAGS']
+                      flags = file.settings['COMPILER_FLAGS'].split
+                      flags.reject! { |flag| flag == '-GCC_WARN_INHIBIT_ALL_WARNINGS' }
+                      file.settings['COMPILER_FLAGS'] = flags.join(' ')
+                    end
+                  end
+                end
+          RUBY
+          podfile.gsub!('flutter_additional_ios_build_settings(target)', injection)
+          File.write('ios/Podfile', podfile)
+          EOF
+          ruby fix_podfile.rb
 
       - name: Build iOS App (Unsigned)
         run: flutter build ios --release --no-codesign
