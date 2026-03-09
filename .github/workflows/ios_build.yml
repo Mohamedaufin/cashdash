@@ -33,13 +33,7 @@ jobs:
 
       - name: Force iOS 14.0 Deployment Target in Podfile
         run: |
-          echo "post_install do |installer|" >> ios/Podfile
-          echo "  installer.pods_project.targets.each do |target|" >> ios/Podfile
-          echo "    target.build_configurations.each do |config|" >> ios/Podfile
-          echo "      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'" >> ios/Podfile
-          echo "    end" >> ios/Podfile
-          echo "  end" >> ios/Podfile
-          echo "end" >> ios/Podfile
+          ruby -i -pe 'gsub(/flutter_additional_ios_build_settings\(target\)/, "flutter_additional_ios_build_settings(target)\n      target.build_configurations.each do |config|\n        config.build_settings[%q(IPHONEOS_DEPLOYMENT_TARGET)] = %q(14.0)\n      end")' ios/Podfile
 
       - name: Build iOS App (Unsigned)
         run: flutter build ios --release --no-codesign
