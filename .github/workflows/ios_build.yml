@@ -31,17 +31,7 @@ jobs:
       - name: Force pod generation
         run: flutter build ios --config-only || true
 
-      - name: Patch gRPC-Core basic_seq.h
-        run: |
-          FILE="ios/Pods/gRPC-Core/src/core/lib/promise/detail/basic_seq.h"
-          if [ -f "$FILE" ]; then
-            echo "Patching $FILE"
-            ruby -i -pe 'gsub(/CallSeqFactory\(/, "CallSeqFactory<>(")' "$FILE"
-          else
-            echo "gRPC-Core basic_seq.h not found, skipping patch."
-          fi
-
-      - name: Force iOS 14.0 and Fix BoringSSL in Podfile
+      - name: Force iOS 14.0 and Fix iOS Pod Issues
         run: |
           cat << 'EOF' > fix_podfile.rb
           podfile = File.read('ios/Podfile')
@@ -58,6 +48,27 @@ jobs:
                       file.settings['COMPILER_FLAGS'] = flags.join(' ')
                     end
                   end
+                end
+                
+                seq_path = 'Pods/gRPC-Core/src/core/lib/promise/detail/basic_seq.h'
+                if File.exist?(seq_path)
+                  content = File.read(seq_path)
+                  if content.include?('CallSeqFactory(')
+                    content.gsub!('CallSeqFactory(', 'CallSeqFactory<>(')
+                    File.write(seq_path, content)
+                  end
+                end
+                
+                join_path = 'Pods/gRPC-Core/src/core/lib/promise/detail/basic_join.h'
+                if File.exist?(join_path)
+                  content = File.read(join_path)
+                  if content.include?('Construct(')
+                    content.gsub!('Construct(', 'Construct<>(')
+                  end
+                  if content.include?('RunFactory(')
+                    content.gsub!('RunFactory(', 'RunFactory<>(')
+                  end
+                  File.write(join_path, content)
                 end
           RUBY
           podfile.gsub!('flutter_additional_ios_build_settings(target)', injection)
