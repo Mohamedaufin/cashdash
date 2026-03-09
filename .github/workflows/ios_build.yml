@@ -28,6 +28,19 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Force pod generation
+        run: flutter build ios --config-only || true
+
+      - name: Force iOS 14.0 Deployment Target in Podfile
+        run: |
+          echo "post_install do |installer|" >> ios/Podfile
+          echo "  installer.pods_project.targets.each do |target|" >> ios/Podfile
+          echo "    target.build_configurations.each do |config|" >> ios/Podfile
+          echo "      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'" >> ios/Podfile
+          echo "    end" >> ios/Podfile
+          echo "  end" >> ios/Podfile
+          echo "end" >> ios/Podfile
+
       - name: Build iOS App (Unsigned)
         run: flutter build ios --release --no-codesign
 
