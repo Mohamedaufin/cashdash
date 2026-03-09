@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1089898817865",
+    "project_id": "cashdash-8cd8b",
+    "storage_bucket": "cashdash-8cd8b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1089898817865:android:fd1ae0239b46ba85aa5298",
+        "android_client_info": {
+          "package_name": "com.aufin.cashdash"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD62yfhKpxay6qD3UkcPAofkOiZLIsRyoE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1089898817865:android:3f37bccfa090b41faa5298",
+        "android_client_info": {
+          "package_name": "com.cash.dash"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD62yfhKpxay6qD3UkcPAofkOiZLIsRyoE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

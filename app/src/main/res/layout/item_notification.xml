@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layout_marginBottom="16dp"
+    android:background="@drawable/bg_glass_3d">
+
+    <!-- Top accent bar + title row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="18dp"
+        android:paddingBottom="12dp">
+
+        <!-- Colored left accent bar -->
+        <View
+            android:id="@+id/viewAccentBar"
+            android:layout_width="4dp"
+            android:layout_height="36dp"
+            android:background="#8BF7E6"
+            android:layout_marginEnd="14dp"/>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <!-- Status badge (QUERY RESPONDED / WAITING FOR RESPONSE) -->
+            <TextView
+                android:id="@+id/tvNotificationTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="QUERY RESPONDED"
+                android:textColor="#8BF7E6"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textAllCaps="true"
+                android:letterSpacing="0.12"
+                android:layout_marginBottom="3dp"/>
+
+            <!-- Time-stamp right aligned -->
+            <TextView
+                android:id="@+id/tvNotificationTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="08 Mar, 05:18 PM"
+                android:textColor="#607DA5"
+                android:textSize="11sp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Thin separator below header -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#18FFFFFF"
+        android:layout_marginStart="18dp"
+        android:layout_marginEnd="18dp"/>
+
+    <!-- Query / subject text -->
+    <TextView
+        android:id="@+id/tvNotificationQuery"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Subject: — \n\nQuestion: —"
+        android:textColor="#B0C8FF"
+        android:textSize="13sp"
+        android:lineSpacingMultiplier="1.4"
+        android:padding="18dp"
+        android:paddingBottom="14dp"/>
+
+    <!-- Separator before response -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#18FFFFFF"
+        android:layout_marginStart="18dp"
+        android:layout_marginEnd="18dp"/>
+
+    <!-- Response section -->
+    <TextView
+        android:id="@+id/tvNotificationReply"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Response: —"
+        android:textColor="#E0EBF5"
+        android:textSize="13sp"
+        android:lineSpacingMultiplier="1.5"
+        android:padding="18dp"
+        android:paddingTop="14dp"/>
+
+</LinearLayout>

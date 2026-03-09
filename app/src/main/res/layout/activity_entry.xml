@@ -1,0 +1,186 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="28dp"
+    android:gravity="center"
+    android:background="@drawable/bg_main_gradient"
+    android:importantForAutofill="no">
+
+    <!-- Header Section -->
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="CashDash"
+        android:textColor="#FFFFFF"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/tvSubtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Manage your wealth wisely"
+        android:textColor="#9EB2FF"
+        android:textSize="16sp"
+        android:layout_marginBottom="40dp" />
+
+    <!-- Flow Selection Buttons -->
+    <LinearLayout
+        android:id="@+id/layoutSelection"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="visible">
+
+        <Button
+            android:id="@+id/btnSelectLogin"
+            android:layout_width="match_parent"
+            android:layout_height="65dp"
+            android:text="Login"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:background="@drawable/bg_glass_3d"
+            app:backgroundTint="@null"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="16dp" />
+
+        <Button
+            android:id="@+id/btnSelectRegister"
+            android:layout_width="match_parent"
+            android:layout_height="65dp"
+            android:text="Register"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:background="@drawable/bg_glass_3d"
+            app:backgroundTint="@null"
+            android:textColor="#FFFFFF" />
+    </LinearLayout>
+
+    <!-- Auth Form Section (Hidden Initially) -->
+    <LinearLayout
+        android:id="@+id/layoutAuthForm"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <!-- FULL NAME -->
+        <EditText
+            android:id="@+id/edtName"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:background="@drawable/bg_glass_input"
+            android:hint="Name"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#9EB2FF"
+            android:padding="16dp"
+            android:autofillHints="name"
+            android:importantForAutofill="yes"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- PHONE NUMBER -->
+        <EditText
+            android:id="@+id/edtPhone"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:background="@drawable/bg_glass_input"
+            android:hint="Phone Number"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#9EB2FF"
+            android:padding="16dp"
+            android:inputType="phone"
+            android:autofillHints="phone"
+            android:importantForAutofill="yes"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- EMAIL -->
+        <EditText
+            android:id="@+id/edtEmail"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:background="@drawable/bg_glass_input"
+            android:hint="Email"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#9EB2FF"
+            android:padding="16dp"
+            android:inputType="textEmailAddress"
+            android:autofillHints="emailAddress"
+            android:importantForAutofill="yes"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- PASSWORD -->
+        <EditText
+            android:id="@+id/edtPassword"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:background="@drawable/bg_glass_input"
+            android:hint="Password"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#9EB2FF"
+            android:padding="16dp"
+            android:inputType="textPassword"
+            android:autofillHints="password"
+            android:importantForAutofill="yes"
+            android:layout_marginBottom="24dp"/>
+
+        <Button
+            android:id="@+id/btnAction"
+            android:layout_width="match_parent"
+            android:layout_height="65dp"
+            android:text="Continue"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:background="@drawable/bg_glass_3d"
+            app:backgroundTint="@null"
+            android:textColor="#FFFFFF" />
+
+        <TextView
+            android:id="@+id/tvBackToSelection"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="16dp"
+            android:text="Back"
+            android:textColor="#9EB2FF"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:padding="8dp" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvForgotPassword"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Forgot Password?"
+        android:textColor="#9EB2FF"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:padding="8dp"
+        android:visibility="gone"
+        android:background="?attr/selectableItemBackground" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="16dp"
+        android:visibility="gone"
+        android:indeterminateTint="#8BF7E6" />
+        
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:textAlignment="center"
+        android:textColor="#FF6B6B"
+        android:textSize="14sp" />
+
+</LinearLayout>
+

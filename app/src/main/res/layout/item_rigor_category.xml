@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:layout_marginBottom="25dp"
+    android:layout_marginTop="25dp"
+    android:background="@drawable/bg_card_dark"
+    android:elevation="10dp">
+
+    <!-- CATEGORY HEADER -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <LinearLayout
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:background="@drawable/bg_icon_dark"
+            android:gravity="center"
+            android:layout_marginEnd="15dp">
+
+            <ImageView
+                android:id="@+id/categoryIcon"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:src="@drawable/ic_edit"
+                android:tint="@android:color/white" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/categoryName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Category Name"
+            android:textColor="@android:color/white"
+            android:textSize="22sp"
+            android:textStyle="bold"/>
+    </LinearLayout>
+
+    <!-- PROGRESS BAR OUTER -->
+    <LinearLayout
+        android:id="@+id/progressOuter"
+        android:layout_width="match_parent"
+        android:layout_height="20dp"
+        android:background="@drawable/bg_glass_progress_outer"
+        android:layout_marginTop="15dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- PROGRESS FILL -->
+        <View
+            android:id="@+id/spentBar"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_glass_progress_fill"
+            android:layout_weight="0" />
+    </LinearLayout>
+
+    <!-- SPENT & LIMIT -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="10dp">
+
+        <TextView
+            android:id="@+id/txtSpent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Spent: ₹0"
+            android:textColor="@android:color/white"
+            android:textSize="14sp" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/txtLimit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Limit: ₹0"
+            android:textColor="@android:color/white"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+</LinearLayout>

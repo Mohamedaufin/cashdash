@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="25dp"
+    android:background="@drawable/bg_transaction"
+    android:gravity="center_horizontal">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Contact Support"
+        android:textColor="#FFFFFF"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="25dp"/>
+
+    <!-- Read-only Name -->
+    <TextView
+        android:id="@+id/tvContactName"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:background="@drawable/bg_glass_input"
+        android:gravity="center_vertical"
+        android:paddingStart="15dp"
+        android:paddingEnd="15dp"
+        android:textColor="#B0C8FF"
+        android:textSize="15sp"
+        android:layout_marginBottom="12dp"
+        android:text="Name: —"/>
+
+    <!-- Read-only Time -->
+    <TextView
+        android:id="@+id/tvContactTime"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:background="@drawable/bg_glass_input"
+        android:gravity="center_vertical"
+        android:paddingStart="15dp"
+        android:paddingEnd="15dp"
+        android:textColor="#B0C8FF"
+        android:textSize="15sp"
+        android:layout_marginBottom="12dp"
+        android:text="Time: —"/>
+
+    <!-- Read-only Email -->
+    <TextView
+        android:id="@+id/tvContactEmail"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:background="@drawable/bg_glass_input"
+        android:gravity="center_vertical"
+        android:paddingStart="15dp"
+        android:paddingEnd="15dp"
+        android:textColor="#B0C8FF"
+        android:textSize="15sp"
+        android:layout_marginBottom="12dp"
+        android:text="Email: —"/>
+
+    <!-- Subject Input -->
+    <EditText
+        android:id="@+id/edtContactSubject"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:background="@drawable/bg_glass_input"
+        android:hint="Subject - Regarding?"
+        android:textColorHint="#607DA5"
+        android:textColor="#FFFFFF"
+        android:gravity="center_vertical"
+        android:paddingStart="15dp"
+        android:paddingEnd="15dp"
+        android:inputType="textCapSentences"
+        android:textSize="15sp"
+        android:layout_marginBottom="12dp"/>
+
+    <!-- Query Input -->
+    <EditText
+        android:id="@+id/edtContactQuery"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:background="@drawable/bg_glass_input"
+        android:hint="Mention your query"
+        android:textColorHint="#607DA5"
+        android:textColor="#FFFFFF"
+        android:gravity="top"
+        android:padding="15dp"
+        android:inputType="textMultiLine|textCapSentences"
+        android:textSize="15sp"
+        android:layout_marginBottom="25dp"/>
+
+    <Button
+        android:id="@+id/btnContactSubmit"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:background="@drawable/bg_transaction"
+        app:backgroundTint="@null"
+        android:text="Submit"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:textAllCaps="false"/>
+
+</LinearLayout>

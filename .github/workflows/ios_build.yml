@@ -1,0 +1,41 @@
+name: iOS Build
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    name: Build iOS App
+    runs-on: macos-latest
+
+    defaults:
+      run:
+        working-directory: ./cashdash_flutter
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: 'latest'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build iOS App (Unsigned)
+        run: flutter build ios --release --no-codesign
+
+      - name: Compress iOS build
+        run: tar -czf ios-build.tar.gz build/ios/iphoneos
+
+      - name: Upload iOS Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-unsigned
+          path: cashdash_flutter/ios-build.tar.gz

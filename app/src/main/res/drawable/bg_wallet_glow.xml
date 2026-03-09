@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Soft outer glow ring behind the wallet progress circle -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <gradient
+        android:type="radial"
+        android:gradientRadius="185dp"
+        android:startColor="#444AA3FF"
+        android:centerColor="#222B6FD0"
+        android:endColor="#001A3A80"/>
+</shape>
