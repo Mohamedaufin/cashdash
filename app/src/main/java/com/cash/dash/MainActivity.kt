@@ -236,6 +236,14 @@ class MainActivity : AppCompatActivity() {
         icon.scaleY = scale
         icon.alpha = alpha
         
+        // Dynamic translation to keep text "attached" to the icon as it scales
+        // Icon height is 84dp. At 1.0f, translation is 0.
+        // At 0.5f, the icon edge moves up by 21dp.
+        val density = resources.displayMetrics.density
+        val iconHeightPx = 84 * density
+        val translationY = -(1.0f - scale) * (iconHeightPx / 2f)
+        text.translationY = translationY
+
         text.setTextColor(color)
         text.alpha = alpha
         // Dynamic shadow adjustment
