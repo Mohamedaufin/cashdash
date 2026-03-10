@@ -42,7 +42,6 @@ class RigorActivity : AppCompatActivity() {
         inputTitle = findViewById(R.id.Title)
         val inputAmount = findViewById<EditText>(R.id.inputAmount)
         val btnNext = findViewById<Button>(R.id.btnNext)
-        val btnBack = findViewById<Button>(R.id.btnBack)
         val calendarExpense = findViewById<CalendarView>(R.id.calendarExpense)
 
         categoryList = findViewById(R.id.categoryListContainer)
@@ -81,8 +80,6 @@ class RigorActivity : AppCompatActivity() {
             showPage2()
             loadCategories()
         }
-
-        btnBack.setOnClickListener { showPage1() }
     }
 
     override fun onStart() {
@@ -107,28 +104,14 @@ class RigorActivity : AppCompatActivity() {
 
     private fun showPage1() {
         isPage2 = false
-        findViewById<View>(R.id.Title).visibility = View.VISIBLE
-        findViewById<View>(R.id.inputAmount).visibility = View.VISIBLE
-        findViewById<View>(R.id.calendarExpense).visibility = View.VISIBLE
-        findViewById<View>(R.id.txtDateLabel).visibility = View.VISIBLE
-        findViewById<View>(R.id.btnNext).visibility = View.VISIBLE
-
-        findViewById<View>(R.id.headingChoose).visibility = View.GONE
-        findViewById<View>(R.id.categoryScroll).visibility = View.GONE
-        findViewById<View>(R.id.btnBack).visibility = View.GONE
+        findViewById<View>(R.id.rigorScrollPage1).visibility = View.VISIBLE
+        findViewById<View>(R.id.rigorPage2).visibility = View.GONE
     }
 
     private fun showPage2() {
         isPage2 = true
-        findViewById<View>(R.id.Title).visibility = View.GONE
-        findViewById<View>(R.id.inputAmount).visibility = View.GONE
-        findViewById<View>(R.id.calendarExpense).visibility = View.GONE
-        findViewById<View>(R.id.txtDateLabel).visibility = View.GONE
-        findViewById<View>(R.id.btnNext).visibility = View.GONE
-
-        findViewById<View>(R.id.headingChoose).visibility = View.VISIBLE
-        findViewById<View>(R.id.categoryScroll).visibility = View.VISIBLE
-        findViewById<View>(R.id.btnBack).visibility = View.VISIBLE
+        findViewById<View>(R.id.rigorScrollPage1).visibility = View.GONE
+        findViewById<View>(R.id.rigorPage2).visibility = View.VISIBLE
     }
 
     private fun loadCategories() {

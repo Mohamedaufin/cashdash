@@ -119,20 +119,39 @@ object HistoryDataManager {
             }
         }
 
-        // Finalize categories list: Filter out zeroed categories for a cleaner graph
+        // Finalize categories list: 
+        // 1. If categoryFilter is "Overall", show ALL saved categories (even if 0)
+        // 2. If categoryFilter is a specific category, show ONLY that one
+        // 3. Always show "no choice" if it has value > 0 and filter is Overall
+        
         val finalCats = mutableListOf<String>()
         val finalVals = mutableListOf<Float>()
         
-        for (i in categories.indices) {
-            if (values[i] > 0) {
+        if (categoryFilter == "Overall") {
+            // Show all saved categories
+            for (i in categories.indices) {
                 finalCats.add(categories[i])
                 finalVals.add(values[i])
             }
-        }
-        
-        if (noChoiceValue > 0) {
-            finalCats.add("no choice")
-            finalVals.add(noChoiceValue)
+            // Add "no choice" only if it has data
+            if (noChoiceValue > 0) {
+                finalCats.add("no choice")
+                finalVals.add(noChoiceValue)
+            }
+        } else {
+            // Specific filter (including "no choice")
+            if (categoryFilter == "no choice") {
+                if (noChoiceValue > 0) {
+                    finalCats.add("no choice")
+                    finalVals.add(noChoiceValue)
+                }
+            } else {
+                val idx = categories.indexOf(categoryFilter)
+                if (idx != -1) {
+                    finalCats.add(categories[idx])
+                    finalVals.add(values[idx])
+                }
+            }
         }
 
         return BreakdownResult(finalCats, finalVals, transactions)

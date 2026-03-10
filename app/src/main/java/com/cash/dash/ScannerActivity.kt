@@ -532,9 +532,10 @@ class ScannerActivity : AppCompatActivity() {
             hint = "Category Name (e.g. Travel)"
             inputType = android.text.InputType.TYPE_CLASS_TEXT
             setTextColor(Color.WHITE)
-            setHintTextColor(Color.parseColor("#A0A0A0"))
-            backgroundTintList = android.content.res.ColorStateList.valueOf(Color.CYAN)
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+            setHintTextColor(Color.parseColor("#A8B5D1"))
+            background = androidx.core.content.ContextCompat.getDrawable(context, R.drawable.bg_glass_input)
+            setPadding(30,30,30,30)
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 140).apply {
                 setMargins(0, 0, 0, 30)
             }
         }
@@ -544,9 +545,10 @@ class ScannerActivity : AppCompatActivity() {
             hint = "Monthly Limit (Optional)"
             inputType = android.text.InputType.TYPE_CLASS_NUMBER
             setTextColor(Color.WHITE)
-            setHintTextColor(Color.parseColor("#A0A0A0"))
-            backgroundTintList = android.content.res.ColorStateList.valueOf(Color.CYAN)
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+            setHintTextColor(Color.parseColor("#A8B5D1"))
+            background = androidx.core.content.ContextCompat.getDrawable(context, R.drawable.bg_glass_input)
+            setPadding(30,30,30,30)
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 140).apply {
                 setMargins(0, 0, 0, 50)
             }
         }
@@ -567,7 +569,7 @@ class ScannerActivity : AppCompatActivity() {
             isAllCaps = false
             setTextColor(Color.WHITE)
             background = androidx.core.content.ContextCompat.getDrawable(context, R.drawable.bg_glass_input)
-            layoutParams = LinearLayout.LayoutParams(0, 140, 1f).apply {
+            layoutParams = LinearLayout.LayoutParams(0, 130, 1f).apply {
                 setMargins(0, 0, 15, 0)
             }
             setOnClickListener { dialog.dismiss() }
@@ -579,7 +581,7 @@ class ScannerActivity : AppCompatActivity() {
             isAllCaps = false
             setTextColor(Color.WHITE)
             background = androidx.core.content.ContextCompat.getDrawable(context, R.drawable.bg_glass_input)
-            layoutParams = LinearLayout.LayoutParams(0, 140, 1f).apply {
+            layoutParams = LinearLayout.LayoutParams(0, 130, 1f).apply {
                 setMargins(15, 0, 0, 0)
             }
             setOnClickListener {

@@ -1,19 +1,22 @@
 package com.cash.dash
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
-import android.os.Bundle
+import android.content.IntentFilter
 import android.graphics.Color
+import android.os.Bundle
 import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.IntentFilter
-import com.google.android.material.bottomsheet.BottomSheetDialog
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.snackbar.Snackbar
 import java.util.*
 
@@ -28,11 +31,30 @@ class MainActivity : AppCompatActivity() {
     private val KEY_NEXT_DATE = "next_date"
     private val KEY_FREQUENCY = "frequency"
 
+    private lateinit var viewPager: ViewPager2
+    private lateinit var adapter: MainPagerAdapter
+
+    // Navbar Views
+    private lateinit var iconHome: ImageView
+    private lateinit var tvHome: TextView
+    private lateinit var tabHome: View
+    private lateinit var iconAllocator: ImageView
+    private lateinit var tvAllocator: TextView
+    private lateinit var tabAllocator: View
+    private lateinit var iconHistory: ImageView
+    private lateinit var tvHistory: TextView
+    private lateinit var tabHistory: View
+
+    private val inactiveScale = 0.5f
+    private val colorActive = Color.WHITE
+    private val colorInactive = Color.parseColor("#D0E0FF")
+    private val argbEvaluator = android.animation.ArgbEvaluator()
+
+    private var isNavigating = false
+
     private val syncReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            loadUserName()
-            loadBalance()
-            updateNextMoneyDays()
+            (supportFragmentManager.findFragmentByTag("f" + viewPager.currentItem) as? HomeFragment)?.refreshUI()
         }
     }
 
@@ -43,38 +65,11 @@ class MainActivity : AppCompatActivity() {
         androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
         window.statusBarColor = Color.TRANSPARENT
 
-        loadUserName()
-        loadBalance()
-        updateNextMoneyDays()
+        initNavbar()
+        initViewPager()
+        
         ensureAccountCreationTime()
 
-        findViewById<ImageView>(R.id.iconScanner).setOnClickListener {
-            startActivity(Intent(this, ScannerActivity::class.java))
-        }
-        findViewById<LinearLayout>(R.id.tabAllocator).setOnClickListener {
-            startActivity(Intent(this, AllocatorActivity::class.java))
-            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
-        }
-        findViewById<ImageView>(R.id.btnMenu).setOnClickListener {
-            startActivity(Intent(this, MenuActivity::class.java))
-        }
-
-        findViewById<ImageView>(R.id.btnProfile).setOnClickListener {
-            startActivity(Intent(this, ProfileActivity::class.java))
-        }
-        findViewById<ImageView>(R.id.iconRigorTracker).setOnClickListener {
-            startActivity(Intent(this, RigorActivity::class.java))
-        }
-
-        // NEW ➜ History tab opens HistoryActivity
-        findViewById<LinearLayout>(R.id.tabHistory)?.setOnClickListener {
-            startActivity(Intent(this, HistoryActivity::class.java))
-            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
-        }
-
-        // 🔥 Intercept Background Push Notifications
-        // When FCM is tapped from the background, Android auto-launches MainActivity.
-        // If it contains "google.message_id" in extras, we know it was a push!
         if (intent.extras?.containsKey("google.message_id") == true) {
             val notifIntent = Intent(this, NotificationActivity::class.java)
             startActivity(notifIntent)
@@ -85,6 +80,178 @@ class MainActivity : AppCompatActivity() {
         registerFCMToken()
         
         FirestoreSyncManager.startRealTimeSync(this)
+    }
+
+    private fun initNavbar() {
+        iconHome = findViewById(R.id.iconHome)
+        tvHome = findViewById(R.id.tvHome)
+        tabHome = findViewById(R.id.tabHome)
+        iconAllocator = findViewById(R.id.iconAllocator)
+        tvAllocator = findViewById(R.id.tvAllocator)
+        tabAllocator = findViewById(R.id.tabAllocator)
+        iconHistory = findViewById(R.id.iconHistory)
+        tvHistory = findViewById(R.id.tvHistory)
+        tabHistory = findViewById(R.id.tabHistory)
+
+        tabAllocator.setOnClickListener { navigateTo(0) }
+        tabHome.setOnClickListener { navigateTo(1) }
+        tabHistory.setOnClickListener { navigateTo(2) }
+        
+        updateNavbarStateBetween(1, 1, 0f)
+    }
+
+    private fun navigateTo(index: Int) {
+        val current = viewPager.currentItem
+        if (current == index || isNavigating) return
+        
+        if (Math.abs(current - index) > 1) {
+            // Direct slide from Allocator to History (or vice-versa) skipping Home
+            performNonAdjacentSlide(current, index)
+        } else {
+            viewPager.setCurrentItem(index, true)
+        }
+    }
+
+    private fun performNonAdjacentSlide(from: Int, to: Int) {
+        isNavigating = true
+        viewPager.isUserInputEnabled = false
+        
+        val width = viewPager.width.toFloat()
+        val animator = android.animation.ValueAnimator.ofFloat(0f, 1f)
+        animator.duration = 300
+        animator.interpolator = android.view.animation.DecelerateInterpolator()
+        
+        var lastValue = 0f
+        
+        animator.addUpdateListener { animation ->
+            val value = animation.animatedValue as Float
+            val deltaProgress = value - lastValue
+            lastValue = value
+            
+            // Sync navbar
+            updateNavbarManualTransition(from, to, value)
+            
+            // Sync page drag
+            if (viewPager.isFakeDragging || viewPager.beginFakeDrag()) {
+                val dragDelta = if (to > from) -deltaProgress * width * 2 else deltaProgress * width * 2
+                viewPager.fakeDragBy(dragDelta)
+            }
+        }
+        
+        animator.addListener(object : android.animation.AnimatorListenerAdapter() {
+            override fun onAnimationEnd(animation: android.animation.Animator) {
+                if (viewPager.isFakeDragging) viewPager.endFakeDrag()
+                viewPager.setCurrentItem(to, false)
+                viewPager.isUserInputEnabled = true
+                updateNavbarStateBetween(to, to, 0f)
+                isNavigating = false
+            }
+        })
+        
+        animator.start()
+    }
+
+    private fun updateNavbarManualTransition(from: Int, to: Int, progress: Float) {
+        val activeS = 1.0f
+        val inactiveS = inactiveScale
+        
+        val scaleFrom = activeS - ((activeS - inactiveS) * progress)
+        val alphaFrom = 1.0f - (0.4f * progress)
+        val colorFrom = argbEvaluator.evaluate(progress, colorActive, colorInactive) as Int
+        
+        val scaleTo = inactiveS + ((activeS - inactiveS) * progress)
+        val alphaTo = 0.6f + (0.4f * progress)
+        val colorTo = argbEvaluator.evaluate(progress, colorInactive, colorActive) as Int
+        
+        // Target specifically the source and destination. Others stay inactive.
+        val states = Array(3) { floatArrayOf(inactiveS, 0.6f, colorInactive.toFloat()) }
+        
+        states[from] = floatArrayOf(scaleFrom, alphaFrom, colorFrom.toFloat())
+        states[to] = floatArrayOf(scaleTo, alphaTo, colorTo.toFloat())
+
+        applyState(iconAllocator, tvAllocator, states[0][0], states[0][1], states[0][2].toInt())
+        applyState(iconHome, tvHome, states[1][0], states[1][1], states[1][2].toInt())
+        applyState(iconHistory, tvHistory, states[2][0], states[2][1], states[2][2].toInt())
+    }
+
+    private fun initViewPager() {
+        viewPager = findViewById(R.id.viewPager)
+        adapter = MainPagerAdapter(this)
+        viewPager.adapter = adapter
+        viewPager.offscreenPageLimit = 2
+        viewPager.setCurrentItem(1, false)
+
+        viewPager.setPageTransformer { page, position ->
+            // During a non-adjacent jump (0 <-> 2), position for Home (if index 1)
+            // will be roughly -1 or 1 relative to the focus.
+            // But with fake drag move of 2 pages, we need to be careful.
+            if (isNavigating) {
+                // If we are skipping Home, hide it
+                val tag = page.tag?.toString() ?: ""
+                if (tag.contains("Home") || (page.parent as? android.view.ViewGroup)?.indexOfChild(page) == 1) {
+                    page.alpha = 0f
+                } else {
+                    page.alpha = 1f
+                }
+            } else {
+                page.alpha = 1f
+            }
+        }
+
+        viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
+                if (!isNavigating) {
+                    updateNavbarStateBetween(position, position + 1, positionOffset)
+                }
+            }
+        })
+    }
+
+    private fun updateNavbarStateBetween(pos1: Int, pos2: Int, offset: Float) {
+        val scales = floatArrayOf(inactiveScale, inactiveScale, inactiveScale)
+        val alphas = floatArrayOf(0.6f, 0.6f, 0.6f)
+        val colors = intArrayOf(colorInactive, colorInactive, colorInactive)
+
+        if (pos1 in 0..2) {
+            scales[pos1] = 1.0f - ((1.0f - inactiveScale) * offset)
+            alphas[pos1] = 1.0f - (0.4f * offset)
+            colors[pos1] = argbEvaluator.evaluate(offset, colorActive, colorInactive) as Int
+        }
+        
+        // Only update pos2 if it's different from pos1 to avoid resetting the active state
+        if (pos2 in 0..2 && pos2 != pos1) {
+            scales[pos2] = inactiveScale + ((1.0f - inactiveScale) * offset)
+            alphas[pos2] = 0.6f + (0.4f * offset)
+            colors[pos2] = argbEvaluator.evaluate(offset, colorInactive, colorActive) as Int
+        }
+
+        applyState(iconAllocator, tvAllocator, scales[0], alphas[0], colors[0])
+        applyState(iconHome, tvHome, scales[1], alphas[1], colors[1])
+        applyState(iconHistory, tvHistory, scales[2], alphas[2], colors[2])
+    }
+
+    private fun applyState(icon: View, text: TextView, scale: Float, alpha: Float, color: Int) {
+        icon.animate().cancel()
+        icon.scaleX = scale
+        icon.scaleY = scale
+        icon.alpha = alpha
+        
+        text.setTextColor(color)
+        text.alpha = alpha
+        // Dynamic shadow adjustment
+        val radius = if (alpha > 0.8f) 6f else 4f
+        text.setShadowLayer(radius, 0f, 2f, if (color == Color.WHITE) Color.parseColor("#3A6AFF") else Color.parseColor("#000C40"))
+    }
+
+    private inner class MainPagerAdapter(fa: FragmentActivity) : FragmentStateAdapter(fa) {
+        override fun getItemCount(): Int = 3
+        override fun createFragment(position: Int): Fragment {
+            return when (position) {
+                0 -> AllocatorFragment()
+                1 -> HomeFragment()
+                else -> HistoryFragment()
+            }
+        }
     }
 
     override fun onStart() {
@@ -130,241 +297,22 @@ class MainActivity : AppCompatActivity() {
         val prefs = getSharedPreferences(PREFS, MODE_PRIVATE)
         if (!prefs.contains("account_creation_time")) {
             prefs.edit().putLong("account_creation_time", System.currentTimeMillis()).apply()
-            // Force a sync to cloud immediately so this baseline exists across devices
             FirestoreSyncManager.pushAllDataToCloud(this)
         }
     }
 
-
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        setIntent(intent) // Update with new intent extras
+        setIntent(intent)
     }
 
     override fun onResume() {
         super.onResume()
-
-        loadUserName()
-        loadBalance()
-        updateNextMoneyDays()
-
         val result = intent.getStringExtra("payment_status")
-
         when (result) {
-            "success" -> Snackbar.make(
-                findViewById(android.R.id.content),
-                "✔ Payment Successful",
-                Snackbar.LENGTH_LONG
-            ).show()
-
-            "failed" -> Snackbar.make(
-                findViewById(android.R.id.content),
-                "❌ Payment Failed or Cancelled",
-                Snackbar.LENGTH_LONG
-            ).show()
+            "success" -> Snackbar.make(findViewById(android.R.id.content), "✔ Payment Successful", Snackbar.LENGTH_LONG).show()
+            "failed" -> Snackbar.make(findViewById(android.R.id.content), "❌ Payment Failed or Cancelled", Snackbar.LENGTH_LONG).show()
         }
-
         intent.removeExtra("payment_status")
-    }
-
-    private fun loadUserName() {
-        val prefs = getSharedPreferences(PREFS, MODE_PRIVATE)
-        val name = prefs.getString(KEY_NAME, "User")
-        findViewById<TextView>(R.id.tvGreeting)?.text = "Hello $name,"
-    }
-
-    private fun loadBalance() {
-        val prefs = getSharedPreferences(PREFS_WALLET, MODE_PRIVATE)
-        val bal = prefs.getInt(KEY_BALANCE, 0)
-        val initialRaw = prefs.getInt("initial_balance", -1)
-        
-        // Fix for 0/0 display instead of 0/1
-        val initial = if (initialRaw == -1) 0 else initialRaw
-        val displayInitial = if (initial == 0 && bal == 0) 0 else initial.coerceAtLeast(1)
-        
-        findViewById<TextView>(R.id.tvBalance)?.text = "₹$bal/$displayInitial"
-        
-        // Update Circular Progress (100 is full)
-        val progressPercent = if (displayInitial > 0) ((bal.toFloat() / displayInitial.toFloat()) * 100).toInt().coerceIn(0, 100) else 0
-        findViewById<com.cash.dash.GradientCircularProgressView>(R.id.walletProgress)?.setProgressCompat(progressPercent, true)
-
-        if (intent.getBooleanExtra("from_splash", false)) {
-            intent.removeExtra("from_splash")
-            val appPrefs = getSharedPreferences("AppPrefs", MODE_PRIVATE)
-            
-            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                if (initialRaw == -1 && !appPrefs.getBoolean("WalletPopupShown", false)) {
-                    showFirstTimeWalletPopup(appPrefs)
-                }
-            }, 1200) // Delay to let the zoom transition settle for first-time user
-        }
-    }
-
-    private fun showFirstTimeWalletPopup(appPrefs: android.content.SharedPreferences) {
-        val layout = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            background = androidx.core.content.ContextCompat.getDrawable(context, R.drawable.bg_glass_3d)
-            setPadding(70, 70, 70, 70)
-            gravity = android.view.Gravity.CENTER
-        }
-
-        val title = android.widget.TextView(this).apply {
-            text = "Update Wallet Balance"
-            textSize = 22f
-            setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(android.graphics.Color.WHITE)
-            gravity = android.view.Gravity.CENTER
-            setPadding(0, 0, 0, 40)
-        }
-        layout.addView(title)
-
-        val btnSet = android.widget.Button(this).apply {
-            text = "Set now"
-            isAllCaps = false
-            textSize = 16f
-            setTextColor(android.graphics.Color.WHITE)
-            background = androidx.core.content.ContextCompat.getDrawable(context, R.drawable.bg_glass_3d)
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 
-                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        }
-        layout.addView(btnSet)
-
-        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
-            .setView(layout)
-            .setCancelable(false)
-            .create()
-            
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-        
-        btnSet.setOnClickListener {
-            dialog.dismiss()
-            startActivity(android.content.Intent(this, BalanceSetupActivity::class.java))
-        }
-
-        dialog.show()
-    }
-
-
-    private fun updateNextMoneyDays() {
-        val prefs = getSharedPreferences(PREFS_SCHEDULE, MODE_PRIVATE)
-
-        val nextDate = prefs.getLong(KEY_NEXT_DATE, -1)
-        val freq = prefs.getInt(KEY_FREQUENCY, -1)
-
-        val textView = findViewById<TextView>(R.id.tvNextMoney) ?: return
-
-        if (nextDate == -1L || freq == -1) {
-            textView.text = "Next money: schedule not set"
-            return
-        }
-
-        val today = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-
-        val next = Calendar.getInstance().apply {
-            timeInMillis = nextDate
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-
-        val nextDateStr = "%02d/%02d/%04d".format(
-            next.get(Calendar.DAY_OF_MONTH),
-            next.get(Calendar.MONTH) + 1,
-            next.get(Calendar.YEAR)
-        )
-
-        if (today.after(next)) {
-            val isAlreadyEstablished = prefs.getBoolean("cycle_initialized", false)
-            while (next.before(today)) {
-                next.add(Calendar.DAY_OF_YEAR, freq)
-            }
-            prefs.edit().putLong(KEY_NEXT_DATE, next.timeInMillis).apply()
-
-            performManualCycleReset(textView, next, isAlreadyEstablished)
-        } else {
-            textView.text = "This money is tentatively till $nextDateStr"
-        }
-    }
-
-    private fun performManualCycleReset(textView: TextView, nextIn: Calendar? = null, isEstablished: Boolean = true) {
-        val prefs = getSharedPreferences(PREFS_SCHEDULE, MODE_PRIVATE)
-        val freq = prefs.getInt(KEY_FREQUENCY, 7)
-        
-        val next = nextIn ?: Calendar.getInstance().apply {
-            timeInMillis = prefs.getLong(KEY_NEXT_DATE, System.currentTimeMillis())
-            add(Calendar.DAY_OF_YEAR, freq)
-        }
-        
-        // 1. Replenish Wallet Balance
-        val wPrefs = getSharedPreferences(PREFS_WALLET, MODE_PRIVATE)
-        val initialBal = wPrefs.getInt("initial_balance", 0)
-        wPrefs.edit().putInt(KEY_BALANCE, initialBal).apply()
-
-        // 2. Reset ALL category spent amounts
-        val categoryPrefs = getSharedPreferences("CategoryPrefs", MODE_PRIVATE)
-        val categories = categoryPrefs.getStringSet("categories", emptySet()) ?: emptySet()
-        val graphPrefs = getSharedPreferences("GraphData", MODE_PRIVATE)
-        val graphEditor = graphPrefs.edit()
-        for (cat in categories) {
-            graphEditor.putFloat("SPENT_$cat", 0f)
-        }
-        graphEditor.putFloat("SPENT_no choice", 0f)
-        graphEditor.apply()
-
-        // 3. Mark initialized & Save next date (if manual trigger)
-        if (nextIn == null) {
-            prefs.edit()
-                .putLong(KEY_NEXT_DATE, next.timeInMillis)
-                .putBoolean("cycle_initialized", true)
-                .apply()
-        }
-
-        // 4. Update UI
-        val newDateStr = "%02d/%02d/%04d".format(
-            next.get(Calendar.DAY_OF_MONTH),
-            next.get(Calendar.MONTH) + 1,
-            next.get(Calendar.YEAR)
-        )
-        textView.text = "This money is tentatively till $newDateStr"
-        
-        if (isEstablished) {
-            ToastHelper.showToast(this, "Cycle Renewed! (Debug: Balance & Spent Reset)", Toast.LENGTH_LONG)
-        }
-
-        // 5. Sync to Cloud
-        FirestoreSyncManager.pushAllDataToCloud(this)
-    }
-
-    private fun openGooglePay() {
-        val pkg = "com.google.android.apps.nbu.paisa.user"
-        val intent = packageManager.getLaunchIntentForPackage(pkg)
-
-        if (intent != null) {
-            startActivity(intent)
-            Toast.makeText(this,"Tap Scan in Google Pay 🔍",Toast.LENGTH_SHORT).show()
-        } else ToastHelper.showToast(this,"Google Pay not installed")
-    }
-
-    private fun openOtherUPIApps() {
-        val detectIntent = Intent(Intent.ACTION_VIEW)
-        detectIntent.data = android.net.Uri.parse("upi://pay")
-
-        val upiApps = packageManager.queryIntentActivities(detectIntent, 0)
-
-        if (upiApps.isEmpty()) {
-            ToastHelper.showToast(this,"No UPI Apps Found")
-            return
-        }
-
-        val chooser = Intent.createChooser(detectIntent,"Select UPI App")
-        startActivity(chooser)
     }
 }

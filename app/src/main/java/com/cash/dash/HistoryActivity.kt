@@ -488,7 +488,7 @@ class HistoryActivity : AppCompatActivity() {
 
 
     private fun setupNavigation() {
-        findViewById<LinearLayout>(R.id.tabHome)?.setOnClickListener {
+        findViewById<View>(R.id.tabHome)?.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             startActivity(intent)
@@ -496,7 +496,7 @@ class HistoryActivity : AppCompatActivity() {
             overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
         }
 
-        findViewById<LinearLayout>(R.id.tabAllocator)?.setOnClickListener {
+        findViewById<View>(R.id.tabAllocator)?.setOnClickListener {
             val intent = Intent(this, AllocatorActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             startActivity(intent)

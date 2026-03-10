@@ -37,7 +37,7 @@ class AllocatorActivity : AppCompatActivity() {
         categoryContainer = findViewById(R.id.categoryContainer)
 
         // HOME NAVIGATION
-        findViewById<LinearLayout>(R.id.tabHome)?.setOnClickListener {
+        findViewById<View>(R.id.tabHome)?.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             startActivity(intent)
@@ -46,7 +46,7 @@ class AllocatorActivity : AppCompatActivity() {
         }
 
         // HISTORY NAVIGATION
-        findViewById<LinearLayout>(R.id.tabHistory)?.setOnClickListener {
+        findViewById<View>(R.id.tabHistory)?.setOnClickListener {
             val intent = Intent(this, HistoryActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             startActivity(intent)
