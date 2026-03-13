@@ -38,6 +38,7 @@ class FirebaseService {
       'password': StorageService.userPassword,
       'setup_complete': !StorageService.isFirstLaunch,
       'account_status': 'active',
+      'app_origin': 'flutter_app', // Helper for data structure identification
     }, SetOptions(merge: true));
 
     // 2. Wallet

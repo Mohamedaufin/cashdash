@@ -10,7 +10,27 @@
           <theme>@style/Theme.Cashdash</theme>
         </config>
       </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/drawable/bg_glass_info_card.xml">
+        <config>
+          <theme>@style/Theme.Cashdash</theme>
+        </config>
+      </layout>
       <layout url="file://$PROJECT_DIR$/app/src/main/res/drawable/bg_transaction.xml">
+        <config>
+          <theme>@style/Theme.Cashdash</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/drawable/ic_i_symbol.xml">
+        <config>
+          <theme>@style/Theme.Cashdash</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/drawable/ic_info_vector.xml">
+        <config>
+          <theme>@style/Theme.Cashdash</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/drawable/ic_pay_contact.xml">
         <config>
           <theme>@style/Theme.Cashdash</theme>
         </config>
@@ -66,6 +86,11 @@
         </config>
       </layout>
       <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/activity_rigor.xml">
+        <config>
+          <theme>@style/Theme.Cashdash</theme>
+        </config>
+      </layout>
+      <layout url="file://$PROJECT_DIR$/app/src/main/res/layout/activity_scanner.xml">
         <config>
           <theme>@style/Theme.Cashdash</theme>
         </config>
@@ -136,7 +161,45 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8ac7212e-47cf-48ad-8ce3-1c3df33b88d2" name="Changes" comment="" />
+    <list default="true" id="8ac7212e-47cf-48ad-8ce3-1c3df33b88d2" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/cash/dash/ScannerActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/cash/dash/ScannerActivity.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/activity_category_analysis.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/activity_category_analysis.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/activity_scanner.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/activity_scanner.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/layout/layout_payment_bottom_sheet.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/layout/layout_payment_bottom_sheet.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/android/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/android/app/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/android/app/src/main/kotlin/com/cash/dash/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/android/app/src/main/kotlin/com/cash/dash/MainActivity.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/android/app/src/main/kotlin/com/cash/dash/SmsReceiver.kt" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/android/app/src/main/kotlin/com/cash/dash/SmsReceiver.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/android/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/android/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/android/settings.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/android/settings.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/lib/components/history_graph.dart" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/lib/components/history_graph.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/lib/screens/allocator_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/lib/screens/allocator_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/lib/screens/auth_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/lib/screens/auth_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/lib/screens/balance_setup_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/lib/screens/balance_setup_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/lib/screens/detail_history_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/lib/screens/detail_history_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/lib/screens/help_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/lib/screens/help_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/lib/screens/history_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/lib/screens/history_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/lib/screens/home_content.dart" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/lib/screens/home_content.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/lib/screens/main_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/lib/screens/main_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/lib/screens/notification_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/lib/screens/notification_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/lib/screens/profile_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/lib/screens/profile_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/lib/screens/rigor_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/lib/screens/rigor_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/lib/screens/scanner_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/lib/screens/scanner_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/lib/screens/set_limit_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/lib/screens/set_limit_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/lib/services/firebase_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/lib/services/firebase_service.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/lib/services/storage_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/lib/services/storage_service.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/lib/theme/app_styles.dart" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/lib/theme/app_styles.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/lib/widgets/bottom_nav_bar.dart" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/lib/widgets/bottom_nav_bar.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/lib/widgets/ditto_dropdown.dart" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/lib/widgets/ditto_dropdown.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/lib/widgets/three_d_dropdown.dart" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/lib/widgets/three_d_dropdown.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/pubspec.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashdash_flutter/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/cashdash_flutter/pubspec.yaml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -145,7 +208,7 @@
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=LocalEmulator, isTemplate=false, identifier=path=C:\Users\moham\.android\avd\Medium_Phone.avd)]" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=PhysicalDevice, isTemplate=false, identifier=serial=R5CW60PKCGX)]" />
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
       <ProjectState />
@@ -193,33 +256,33 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Android App.app.executor": "Run",
-    "ApkExportedModule": "cashdash.app",
-    "ExportApk.ApkPathForcashdash.app": "C:\\Users\\moham\\AndroidStudioProjects\\cashdash\\app",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.cidr.known.project.marker": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.readMode.enableVisualFormatting": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "cf.first.check.clang-format": "false",
-    "cidr.known.project.marker": "true",
-    "com.google.services.firebase.aqiPopupShown": "true",
-    "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "main",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/moham/AndroidStudioProjects/cashdash",
-    "show.migrate.to.gradle.popup": "false"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Android App.app.executor&quot;: &quot;Run&quot;,
+    &quot;ApkExportedModule&quot;: &quot;cashdash.app&quot;,
+    &quot;ExportApk.ApkPathForcashdash.app&quot;: &quot;C:\\Users\\moham\\AndroidStudioProjects\\cashdash\\app&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;com.google.services.firebase.aqiPopupShown&quot;: &quot;true&quot;,
+    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/moham/AndroidStudioProjects/cashdash&quot;,
+    &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;
   },
-  "keyToStringList": {
-    "ExportApk.BuildVariants": [
-      "release"
+  &quot;keyToStringList&quot;: {
+    &quot;ExportApk.BuildVariants&quot;: [
+      &quot;release&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RunManager">
     <configuration name="app" type="AndroidRunConfigurationType" factoryName="Android App" activateToolWindowBeforeRun="false">
       <module name="cashdash.app" />
@@ -330,12 +393,12 @@
         </entry>
         <entry key="com.cash.dash">
           <value>
-            <CheckInfo lastCheckTimestamp="1773134118474" />
+            <CheckInfo lastCheckTimestamp="1773393572484" />
           </value>
         </entry>
         <entry key="com.cash.dash.test">
           <value>
-            <CheckInfo lastCheckTimestamp="1773134118470" />
+            <CheckInfo lastCheckTimestamp="1773393572486" />
           </value>
         </entry>
       </map>

@@ -98,6 +98,16 @@
 
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/tvWalletBalance"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Wallet Balance: ₹0"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:layout_marginBottom="10dp" />
+
     <Button
         android:id="@+id/btnPayInitiate"
         android:layout_width="match_parent"

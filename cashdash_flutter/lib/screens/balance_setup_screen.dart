@@ -56,12 +56,10 @@ class _BalanceSetupScreenState extends State<BalanceSetupScreen> {
         decoration: const BoxDecoration(
           gradient: AppColors.mainBackgroundGradient,
         ),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
                 child: Column(
                   children: [
                     const SizedBox(height: 35),
@@ -76,12 +74,12 @@ class _BalanceSetupScreenState extends State<BalanceSetupScreen> {
                     const SizedBox(height: 30),
                     _buildActionButtons(),
                     const SizedBox(height: 40),
-                    _buildNumberPad(),
                   ],
                 ),
               ),
-            );
-          },
+            ),
+            _buildNumberPad(),
+          ],
         ),
       ),
     );
@@ -129,8 +127,10 @@ class _BalanceSetupScreenState extends State<BalanceSetupScreen> {
       child: GlassContainer(
         height: 100,
         borderRadius: 14,
+      child: Center(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const Text('₹', style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold)),
             const SizedBox(width: 10),
@@ -140,6 +140,7 @@ class _BalanceSetupScreenState extends State<BalanceSetupScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -195,9 +196,10 @@ class _BalanceSetupScreenState extends State<BalanceSetupScreen> {
 
   Widget _buildNumberPad() {
     return Container(
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.05),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
         border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),

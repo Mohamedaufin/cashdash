@@ -7,6 +7,9 @@ import 'package:intl/intl.dart';
 
 import '../theme/app_colors.dart';
 import '../services/storage_service.dart';
+import '../components/transaction_dialog.dart';
+import '../components/glass_input.dart';
+import '../components/glass_button.dart';
 
 class HelpScreen extends StatefulWidget {
   const HelpScreen({super.key});
@@ -91,20 +94,9 @@ class _HelpScreenState extends State<HelpScreen> {
       builder: (_) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            return Dialog(
-              backgroundColor: Colors.transparent,
-              child: Container(
-                width: MediaQuery.of(context).size.width - 60,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF1E3A70), Color(0xFF0A1640)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white.withOpacity(0.2), width: 1.2),
-                ),
-                padding: const EdgeInsets.all(20),
+            return TransactionDialog(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -112,54 +104,51 @@ class _HelpScreenState extends State<HelpScreen> {
                     children: [
                       const Text(
                         'Contact Support',
-                        style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
                       ),
-                      const SizedBox(height: 15),
-                      Text('Name: $name', style: const TextStyle(color: Colors.white70)),
-                      Text('Time: $currentTime', style: const TextStyle(color: Colors.white70)),
-                      Text('Email: $email', style: const TextStyle(color: Colors.white70)),
-                      const SizedBox(height: 15),
+                      const SizedBox(height: 16),
+                      Text('Name: $name', style: TextStyle(color: Colors.white.withOpacity(0.6))),
+                      Text('Time: $currentTime', style: TextStyle(color: Colors.white.withOpacity(0.6))),
+                      Text('Email: $email', style: TextStyle(color: Colors.white.withOpacity(0.6))),
+                      const SizedBox(height: 24),
 
-                      _buildDialogInput(subjectCtrl, 'Subject', maxLines: 1),
-                      const SizedBox(height: 10),
-                      _buildDialogInput(queryCtrl, 'Your Query/Issue details', maxLines: 4),
+                      GlassInput(
+                        controller: subjectCtrl,
+                        hintText: 'Subject',
+                      ),
+                      const SizedBox(height: 16),
+                      GlassInput(
+                        controller: queryCtrl,
+                        hintText: 'Your Query/Issue details',
+                        maxLines: 4,
+                      ),
 
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF4AA3FF),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          onPressed: isSubmitting
-                              ? null
-                              : () {
-                                  final subject = subjectCtrl.text.trim();
-                                  final query = queryCtrl.text.trim();
+                      const SizedBox(height: 32),
+                      GlassButton(
+                        label: isSubmitting ? 'Submitting...' : 'Submit',
+                        isSecondary: true,
+                        onTap: isSubmitting
+                            ? () {}
+                            : () {
+                                final subject = subjectCtrl.text.trim();
+                                final query = queryCtrl.text.trim();
 
-                                  if (subject.isEmpty) {
-                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a subject')));
-                                    return;
-                                  }
-                                  if (query.isEmpty) {
-                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please mention your query')));
-                                    return;
-                                  }
+                                if (subject.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a subject')));
+                                  return;
+                                }
+                                if (query.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please mention your query')));
+                                  return;
+                                }
 
-                                  setDialogState(() {
-                                    isSubmitting = true;
-                                  });
-                                  
-                                  _submitQueryToFirestore(name, currentTime, email, subject, query);
-                                  Navigator.pop(context);
-                                },
-                          child: Text(
-                            isSubmitting ? 'Submitting...' : 'Submit',
-                            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-                          ),
-                        ),
+                                setDialogState(() {
+                                  isSubmitting = true;
+                                });
+                                
+                                _submitQueryToFirestore(name, currentTime, email, subject, query);
+                                Navigator.pop(context);
+                              },
                       ),
                     ],
                   ),
@@ -172,26 +161,7 @@ class _HelpScreenState extends State<HelpScreen> {
     );
   }
 
-  Widget _buildDialogInput(TextEditingController ctrl, String hint, {int maxLines = 1}) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
-      ),
-      child: TextField(
-        controller: ctrl,
-        maxLines: maxLines,
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: const TextStyle(color: Colors.white38),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-          border: InputBorder.none,
-        ),
-      ),
-    );
-  }
+  // REMOVED: _buildDialogInput (now using global GlassInput)
 
   Future<void> _submitQueryToFirestore(String name, String time, String email, String subject, String query) async {
     final user = FirebaseAuth.instance.currentUser;
@@ -281,7 +251,7 @@ class _HelpScreenState extends State<HelpScreen> {
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.12),
                           border: Border.all(color: Colors.white.withOpacity(0.15), width: 1.2),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(25), // Circular
                           boxShadow: [
                             BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 10, offset: const Offset(0, 4))
                           ],

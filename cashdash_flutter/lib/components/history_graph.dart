@@ -41,7 +41,7 @@ class HistoryGraph extends StatelessWidget {
         }
       },
       child: CustomPaint(
-        size: const Size(double.infinity, 200),
+        size: const Size(double.infinity, 300),
         painter: HistoryPainter(
           values: values,
           labels: labels,
@@ -70,134 +70,83 @@ class HistoryPainter extends CustomPainter {
     final double maxVal = values.isEmpty ? 0 : values.reduce(max).toDouble();
     final double adjustedMax = maxVal <= 0 ? 100 : maxVal * 1.2;
 
-    final double barWidth = (size.width / values.length) * 0.6;
-    final double spacing = (size.width / values.length) * 0.4;
-    final double startX = spacing / 2;
+    final double barValuesCount = values.length.toDouble();
+    final double availableWidth = size.width;
+    // Native: spacing = availableWidth / (barValues.size + 1f)
+    final double spacing = availableWidth / (barValuesCount + 1);
+    // Native: barWidth = availableWidth / 14f
+    final double barWidth = availableWidth / 14;
 
     final Paint barPaint = Paint()
       ..style = PaintingStyle.fill
-      ..shader = const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [AppColors.neonBlue, Colors.transparent],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
-
-    final Paint selectedPaint = Paint()
-      ..style = PaintingStyle.fill
-      ..shader = const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [Colors.white, Colors.white10],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+      ..isAntiAlias = true;
 
     final TextPainter textPainter = TextPainter(
       textDirection: ui.TextDirection.ltr,
     );
 
+    const double bottom = 270.0; // Fixed bottom for bars
+    const double graphHeight = 200.0; // Max height for bars
+
     for (int i = 0; i < values.length; i++) {
-      final double barHeight = (values[i] / adjustedMax) * (size.height - 40);
-      final double x = startX + i * (barWidth + spacing);
-      final double y = size.height - 40 - barHeight;
+      final double value = values[i];
+      // Native: center = paddingLeft + (spacing * (i + 1))
+      final double center = spacing * (i + 1);
+      final bool isHighlighted = (i == selectedIndex);
 
-      final Rect rect = Rect.fromLTWH(x, y, barWidth, barHeight);
-      final RRect rrect = RRect.fromRectAndRadius(rect, const Radius.circular(28));
-
-      // 1. Draw Background (Outer Shell)
-      final Paint outerPaint = Paint()
-        ..color = const Color(0x10FFFFFF)
-        ..style = PaintingStyle.fill;
-      canvas.drawRRect(rrect, outerPaint);
-
-      final Paint outerStroke = Paint()
-        ..color = const Color(0x30FFFFFF)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1;
-      canvas.drawRRect(rrect, outerStroke);
-
-      if (values[i] > 0) {
-        // 2. Draw Fill
-        final Paint fillPaint = Paint()
-          ..style = PaintingStyle.fill
-          ..shader = const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF80A0FF), Color(0xFF4060DD)],
-          ).createShader(rect);
-        canvas.drawRRect(rrect, fillPaint);
-
-        // 3. Draw Gloss Highlight
-        const double glossPadding = 2.0;
-        final Rect glossRect = Rect.fromLTWH(
-          x + glossPadding,
-          y,
-          barWidth - (glossPadding * 2),
-          barHeight > 10 ? barHeight - 10 : barHeight,
+      if (value == 0) {
+        // Label (₹0) matches native drawText("₹0", center, bottom - 30f, textPaint)
+        textPainter.text = const TextSpan(
+          text: "₹0",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 14, // Roughly 38f in native
+            fontWeight: FontWeight.bold,
+          ),
         );
-        final RRect glossRRect = RRect.fromRectAndCorners(
-          glossRect,
-          topLeft: const Radius.circular(28),
-          topRight: const Radius.circular(28),
+        textPainter.layout();
+        textPainter.paint(canvas, Offset(center - textPainter.width / 2, bottom - 35));
+      } else {
+        final double barHeight = (value / adjustedMax * graphHeight).clamp(25.0, graphHeight);
+        final double left = center - barWidth / 2;
+        final double top = bottom - barHeight;
+
+        final Rect rect = Rect.fromLTWH(left, top, barWidth, barHeight);
+        // Native: canvas.drawRoundRect(RectF(left, top, right, bottom), 40f, 40f, barPaint)
+        final RRect rrect = RRect.fromRectAndRadius(rect, const Radius.circular(40));
+
+        // Use native colors: #FFC107 for highlighted, #D9D9D9 for normal
+        barPaint.color = isHighlighted ? const Color(0xFFFFC107) : const Color(0xFFD9D9D9);
+        canvas.drawRRect(rrect, barPaint);
+
+        // Amount Label (₹Value)
+        final amountText = "₹${value.toInt()}";
+        textPainter.text = TextSpan(
+          text: amountText,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14, // Roughly 42f in native
+            fontWeight: FontWeight.bold,
+          ),
         );
-        final Paint glossPaint = Paint()
-          ..style = PaintingStyle.fill
-          ..shader = const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0x60FFFFFF), Color(0x00FFFFFF)],
-          ).createShader(glossRect);
-        canvas.drawRRect(glossRRect, glossPaint);
+        textPainter.layout();
+        textPainter.paint(canvas, Offset(center - textPainter.width / 2, top - 25));
       }
 
-      // Highlight the selected bar
-      if (i == selectedIndex) {
-        final Paint shadowPaint = Paint()
-          ..color = Colors.white.withOpacity(0.3)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.outer, 10);
-        canvas.drawRRect(rrect, shadowPaint);
-      }
-
-      // Label (dd/MM)
+      // X-Axis Label - Positioned below the baseline
       textPainter.text = TextSpan(
         text: labels[i],
         style: TextStyle(
           color: Colors.white,
-          fontSize: 11,
-          fontWeight: i == selectedIndex ? FontWeight.bold : FontWeight.w500,
+          fontSize: labels[i].length > 5 ? 11 : 12,
+          fontWeight: FontWeight.normal,
         ),
       );
       textPainter.layout();
-      textPainter.paint(
-        canvas,
-        Offset(x + (barWidth - textPainter.width) / 2, size.height - 25),
-      );
-
-      // 4. Draw Amount Label (White) above the bar
-      final amountValue = values[i];
-      final amountText = "₹${NumberFormat.compact().format(amountValue)}";
-      textPainter.text = TextSpan(
-        text: amountText,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-        ),
-      );
-      textPainter.layout();
-      textPainter.paint(
-        canvas,
-        Offset(x + (barWidth - textPainter.width) / 2, y - 20),
-      );
+      textPainter.paint(canvas, Offset(center - textPainter.width / 2, bottom + 15));
     }
 
-    // Horizontal grid line (bottom)
-    final Paint linePaint = Paint()
-      ..color = Colors.white10
-      ..strokeWidth = 1;
-    canvas.drawLine(
-      Offset(0, size.height - 40),
-      Offset(size.width, size.height - 40),
-      linePaint,
-    );
+    // Horizontal grid line (baseline) removed for native parity
   }
 
   @override

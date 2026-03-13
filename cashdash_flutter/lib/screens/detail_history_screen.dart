@@ -7,6 +7,9 @@ import '../services/transaction_service.dart';
 import '../services/category_icon_helper.dart';
 import '../services/firebase_service.dart';
 import '../services/history_service.dart';
+import '../components/transaction_dialog.dart';
+import '../components/glass_input.dart';
+import '../components/glass_button.dart';
 
 /// Mirrors DetailHistoryActivity.kt — shows category breakdown pie + transaction list
 /// for a specific day, week, or month.
@@ -44,41 +47,70 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
     final all = StorageService.rawHistoryEntries;
     final filtered = <TransactionItem>[];
     final totals = <String, double>{};
+    
+    // Initialize all registered categories to 0.0
+    for (final cat in StorageService.categories) {
+      totals[cat] = 0.0;
+    }
+
+    double noChoiceTotal = 0.0;
 
     for (final raw in all) {
       final p = raw.split('|');
-      if (p.length < 9) continue;
+      if (p.isEmpty) continue;
 
-      final hWeek = int.tryParse(p[5]) ?? 0;
-      final hDay = int.tryParse(p[6]) ?? 0;
-      final hMonth = int.tryParse(p[7]) ?? 0;
-      final hYear = int.tryParse(p[8]) ?? 0;
-      final amount = double.tryParse(p[4]) ?? 0.0;
-      final cat = p[3];
+      String title = 'Expense';
+      String cat = 'no choice';
+      double amount = 0.0;
+      int hWeek = 0, hDay = 0, hMonth = 0, hYear = 0;
+
+      if (p.length == 7) {
+        // Old Format: ATSTMT|category|amount|week|day|month|year
+        cat = p[1];
+        amount = double.tryParse(p[2]) ?? 0.0;
+        hWeek = int.tryParse(p[3]) ?? 0;
+        hDay = int.tryParse(p[4]) ?? 0;
+        hMonth = int.tryParse(p[5]) ?? 0;
+        hYear = int.tryParse(p[6]) ?? 0;
+      } else if (p.length >= 9) {
+        // New Format: EXP|timestamp|title|category|amount|week|day|month|year
+        title = p[2];
+        cat = p[3];
+        amount = double.tryParse(p[4]) ?? 0.0;
+        hWeek = int.tryParse(p[5]) ?? 0;
+        hDay = int.tryParse(p[6]) ?? 0;
+        hMonth = int.tryParse(p[7]) ?? 0;
+        hYear = int.tryParse(p[8]) ?? 0;
+      } else continue;
 
       bool match = false;
       if (widget.mode == 'DAILY') {
-        match = hYear == widget.year &&
-            hMonth == widget.month &&
-            hWeek == widget.week &&
-            hDay == widget.day;
+        match = hYear == widget.year && hMonth == widget.month && hWeek == widget.week && hDay == widget.day;
       } else if (widget.mode == 'WEEKLY') {
-        match = hYear == widget.year &&
-            hMonth == widget.month &&
-            hWeek == widget.week;
+        match = hYear == widget.year && hMonth == widget.month && hWeek == widget.week;
       } else {
         match = hYear == widget.year && hMonth == widget.month;
       }
 
       if (match) {
         filtered.add(TransactionItem(
-          title: p[2],
+          title: title,
           category: cat,
           amount: amount.toInt(),
           rawEntry: raw,
         ));
-        totals[cat] = (totals[cat] ?? 0) + amount;
+        
+        if (cat.toLowerCase() == 'no choice') {
+          noChoiceTotal += amount;
+        } else {
+          totals[cat] = (totals[cat] ?? 0.0) + amount;
+        }
       }
+    }
+    
+    // Add "no choice" only if it has a value (Ditto native logic)
+    if (noChoiceTotal > 0) {
+      totals['no choice'] = noChoiceTotal;
     }
 
     // Sort newest first by timestamp in rawEntry[1]
@@ -91,11 +123,23 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
     _transactions = filtered;
     _categoryTotals = totals;
   }
+  String get _formattedDate {
+    // Find the Monday of the first week of the month
+    DateTime firstOfMonth = DateTime(widget.year, widget.month + 1, 1);
+    int firstDayOffset = (firstOfMonth.weekday - DateTime.monday);
+    DateTime firstMonday = firstOfMonth.subtract(Duration(days: firstDayOffset));
+    
+    // Target date is firstMonday + week * 7 + day
+    DateTime targetDate = firstMonday.add(Duration(days: (widget.week * 7) + widget.day));
+    
+    // Format: dd/mm/yyyy
+    return "${targetDate.day.toString().padLeft(2, '0')}/${targetDate.month.toString().padLeft(2, '0')}/${targetDate.year}";
+  }
 
   String get _title {
     switch (widget.mode) {
       case 'DAILY':
-        return 'Breakdown for Day ${widget.day + 1}';
+        return 'Breakdown for $_formattedDate';
       case 'WEEKLY':
         return 'Breakdown for Week ${widget.week + 1}';
       default:
@@ -230,7 +274,7 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
                           fontWeight: FontWeight.bold,
                           fontSize: 18)),
                   const SizedBox(height: 2),
-                  Text(tx.category.toUpperCase(),
+                  Text(tx.category.toLowerCase() == 'no choice' ? '(UNALLOCATED)' : '(${tx.category.toUpperCase()})',
                       style: const TextStyle(color: Color(0xFFB0C8FF), fontSize: 14)),
                 ],
               ),
@@ -275,13 +319,29 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
             const Text('Transaction Options',
                 style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 24),
-            _actionButton('Edit Title', AppColors.neonBlue, () => _showEditTitleDialog(tx)),
+            GlassButton(label: 'Edit Title', onTap: () {
+              Navigator.pop(context);
+              _showEditTitleDialog(tx);
+            }),
             const SizedBox(height: 12),
-            _actionButton('Edit Amount', AppColors.neonBlue, () => _showEditAmountDialog(tx)),
+            GlassButton(label: 'Edit Amount', onTap: () {
+              Navigator.pop(context);
+              _showEditAmountDialog(tx);
+            }),
             const SizedBox(height: 12),
-            _actionButton('Reallocate Category', AppColors.neonBlue, () => _showReallocationSheet(tx)),
+            GlassButton(label: 'Reallocate Category', onTap: () {
+              Navigator.pop(context);
+              _showReallocationSheet(tx);
+            }),
             const SizedBox(height: 12),
-            _actionButton('Delete Transaction', Colors.redAccent, () => _showDeleteConfirmation(tx)),
+            GlassButton(
+              label: 'Delete Transaction',
+              color: Colors.redAccent,
+              onTap: () {
+                Navigator.pop(context);
+                _showDeleteConfirmation(tx);
+              },
+            ),
           ],
         ),
       ),
@@ -292,29 +352,52 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
     final controller = TextEditingController(text: tx.title);
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1F35),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Edit Title', style: TextStyle(color: Colors.white)),
-        content: TextField(
-          controller: controller,
-          style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(
-            hintText: 'Enter new title',
-            hintStyle: TextStyle(color: Colors.white24),
+      builder: (ctx) => TransactionDialog(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Edit Title',
+                style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 24),
+              GlassInput(
+                controller: controller,
+                hintText: 'Enter new title',
+              ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: GlassButton(
+                      label: 'Cancel',
+                      isSecondary: true,
+                      onTap: () => Navigator.pop(ctx),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: GlassButton(
+                      label: 'Save',
+                      isSecondary: true,
+                      onTap: () async {
+                        final newTitle = controller.text.trim();
+                        if (newTitle.isNotEmpty) {
+                          Navigator.pop(ctx);
+                          await TransactionService.updateTransactionTitle(tx, newTitle);
+                          setState(() => _loadData());
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          TextButton(onPressed: () async {
-            final newTitle = controller.text.trim();
-            if (newTitle.isNotEmpty) {
-              Navigator.pop(ctx);
-              await TransactionService.updateTransactionTitle(tx, newTitle);
-              setState(() => _loadData());
-            }
-          }, child: const Text('Save')),
-        ],
       ),
     );
   }
@@ -323,55 +406,58 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
     final controller = TextEditingController(text: tx.amount.toString());
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1F35),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Edit Amount', style: TextStyle(color: Colors.white)),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(
-            hintText: 'Enter new amount',
-            hintStyle: TextStyle(color: Colors.white24),
+      builder: (ctx) => TransactionDialog(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Edit Amount',
+                style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 24),
+              GlassInput(
+                controller: controller,
+                hintText: 'Enter new amount',
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: GlassButton(
+                      label: 'Cancel',
+                      isSecondary: true,
+                      onTap: () => Navigator.pop(ctx),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: GlassButton(
+                      label: 'Save',
+                      isSecondary: true,
+                      onTap: () async {
+                        final newAmount = int.tryParse(controller.text) ?? 0;
+                        if (newAmount > 0) {
+                          Navigator.pop(ctx);
+                          await TransactionService.updateTransactionAmount(tx, newAmount);
+                          setState(() => _loadData());
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          TextButton(onPressed: () async {
-            final newAmount = int.tryParse(controller.text) ?? 0;
-            if (newAmount > 0) {
-              Navigator.pop(ctx);
-              await TransactionService.updateTransactionAmount(tx, newAmount);
-              setState(() => _loadData());
-            }
-          }, child: const Text('Save')),
-        ],
       ),
     );
   }
 
-  Widget _actionButton(String label, Color color, VoidCallback onTap) {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: () {
-          Navigator.pop(context);
-          onTap();
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color.withOpacity(0.2),
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-              side: BorderSide(color: color.withOpacity(0.5))),
-        ),
-        child:
-            Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-      ),
-    );
-  }
+  // REMOVED: Local _actionButton helper (now using GlassButton)
 
   void _showReallocationSheet(TransactionItem tx) {
     final categoriesList = StorageService.categories
@@ -422,28 +508,54 @@ class _DetailHistoryScreenState extends State<DetailHistoryScreen> {
   void _showDeleteConfirmation(TransactionItem tx) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF1A2035),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Delete Transaction?',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        content: const Text('Are you sure you want to delete this transaction?',
-            style: TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await TransactionService.deleteTransaction(tx);
-              FirebaseService.pushAllDataToCloud();
-              setState(() => _loadData());
-            },
-            child: const Text('Delete',
-                style: TextStyle(color: Colors.redAccent)),
+      builder: (_) => TransactionDialog(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 48),
+              const SizedBox(height: 16),
+              const Text(
+                'Delete Transaction?',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Are you sure you want to delete this transaction?',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white70, fontSize: 16),
+              ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: GlassButton(
+                      label: 'Cancel',
+                      isSecondary: true,
+                      onTap: () => Navigator.pop(context),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: GlassButton(
+                      label: 'Delete',
+                      color: Colors.redAccent,
+                      onTap: () async {
+                        Navigator.pop(context);
+                        await TransactionService.deleteTransaction(tx);
+                        FirebaseService.pushAllDataToCloud();
+                        setState(() => _loadData());
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -464,8 +576,8 @@ class _CategoryBreakdownPainter extends CustomPainter {
     final double barWidth = size.width / 14.0;
     final double spacing = size.width / (values.length + 1.0);
 
-    final double bottom = size.height - 70.0;
-    final double graphHeight = size.height - 110.0;
+    final double bottom = size.height - 40.0;
+    final double graphHeight = size.height - 80.0;
 
     final Paint barPaint = Paint()
       ..color = const Color(0xFFD9D9D9)
@@ -483,12 +595,13 @@ class _CategoryBreakdownPainter extends CustomPainter {
 
       if (value == 0) {
         _drawText(canvas, "₹0", center, bottom - 25.0, textPainter, 12, Colors.white);
-        _drawText(canvas, categories[i], center, size.height - 70.0, textPainter, 12, Colors.white);
+        _drawText(canvas, categories[i], center, bottom + 15.0, textPainter, 12, Colors.white);
         continue;
       }
 
       double barHeight = (value / maxVal) * graphHeight;
-      if (barHeight < 10.0) barHeight = 10.0;
+      // Native parity: show a small 4dp bar even for zero values so they are visible as allocations
+      if (barHeight < 4.0) barHeight = 4.0;
 
       final double left = center - barWidth / 2;
       final double right = center + barWidth / 2;
@@ -525,8 +638,10 @@ class _CategoryBreakdownPainter extends CustomPainter {
         glossPaint,
       );
 
+      String label = categories[i];
+      if (label.toLowerCase() == 'no choice') label = 'Unallocated';
       _drawText(canvas, "₹${value.toInt()}", center, top - 20.0, textPainter, 12, Colors.white);
-      _drawText(canvas, categories[i], center, size.height - 70.0, textPainter, 12, Colors.white);
+      _drawText(canvas, label, center, bottom + 15.0, textPainter, 12, Colors.white);
     }
   }
 

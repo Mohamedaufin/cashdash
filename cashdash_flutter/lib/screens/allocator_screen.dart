@@ -11,6 +11,9 @@ import 'category_analysis_screen.dart';
 import 'set_limit_screen.dart';
 import '../widgets/three_d_dropdown.dart';
 import '../theme/app_styles.dart';
+import '../components/transaction_dialog.dart';
+import '../components/glass_input.dart';
+import '../components/glass_button.dart';
 
 class AllocatorScreen extends StatefulWidget {
   const AllocatorScreen({super.key});
@@ -42,55 +45,44 @@ class _AllocatorScreenState extends State<AllocatorScreen> {
     }
   }
   Future<bool?> _showDeleteConfirmation(String name) async {
-    return await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0F1A3A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        content: Column(
+  return await showDialog<bool>(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) => TransactionDialog(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 20),
+            const Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 48),
+            const SizedBox(height: 16),
             Text(
-              'Delete Allocation - $name?',
+              'Delete Allocation',
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 12),
+            Text(
+              'Are you sure you want to delete "$name"? This action cannot be undone.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 15),
+            ),
+            const SizedBox(height: 32),
             Row(
               children: [
                 Expanded(
-                  child: GestureDetector(
+                  child: GlassButton(
+                    label: 'Cancel',
+                    isSecondary: true,
                     onTap: () => Navigator.pop(ctx, false),
-                    child: Container(
-                      height: 55,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.white10),
-                      ),
-                      child: const Center(
-                        child: Text('Cancel', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                      ),
-                    ),
                   ),
                 ),
-                const SizedBox(width: 15),
+                const SizedBox(width: 16),
                 Expanded(
-                  child: GestureDetector(
+                  child: GlassButton(
+                    label: 'Delete',
+                    color: Colors.redAccent,
                     onTap: () => Navigator.pop(ctx, true),
-                    child: Container(
-                      height: 55,
-                      decoration: BoxDecoration(
-                        color: Colors.redAccent.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
-                      ),
-                      child: const Center(
-                        child: Text('Delete', style: TextStyle(color: Colors.redAccent, fontSize: 16, fontWeight: FontWeight.bold)),
-                      ),
-                    ),
                   ),
                 ),
               ],
@@ -98,8 +90,9 @@ class _AllocatorScreenState extends State<AllocatorScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -139,6 +132,7 @@ class _AllocatorScreenState extends State<AllocatorScreen> {
               bottom: 0,
               child: GlassBottomNavBar(
                 selectedIndex: 0,
+                scrollPosition: 0.0,
                 onTabSelected: (index) {
                   if (index == 1) {
                     Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainScreen()));
@@ -201,12 +195,8 @@ class _AllocatorScreenState extends State<AllocatorScreen> {
         confirmDismiss: (direction) async {
           return await _showDeleteConfirmation(cat);
         },
-        background: Container(
-          alignment: Alignment.centerRight,
-          padding: const EdgeInsets.only(right: 20),
-          decoration: BoxDecoration(color: Colors.redAccent.withOpacity(0.5), borderRadius: BorderRadius.circular(16)),
-          child: const Icon(Icons.delete, color: Colors.white),
-        ),
+        background: const SizedBox.shrink(), // Natural swipe, no red background
+        secondaryBackground: const SizedBox.shrink(),
         onDismissed: (_) {
           final cats = StorageService.categories;
           final index = cats.indexOf(cat);
@@ -345,82 +335,126 @@ class _AllocatorScreenState extends State<AllocatorScreen> {
   }
 
   void _showRenameDialog(String oldName) {
-    final controller = TextEditingController(text: oldName);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A2035),
-        title: const Text('Rename Category', style: TextStyle(color: Colors.white)),
-        content: TextField(
-          controller: controller,
-          style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(hintText: 'New Name', hintStyle: TextStyle(color: Colors.white24)),
+  final controller = TextEditingController(text: oldName);
+  showDialog(
+    context: context,
+    builder: (context) => TransactionDialog(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Rename Category',
+              style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 24),
+            GlassInput(
+              controller: controller,
+              hintText: 'New Name',
+            ),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                Expanded(
+                  child: GlassButton(
+                    label: 'Cancel',
+                    isSecondary: true,
+                    onTap: () => Navigator.pop(context),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: GlassButton(
+                    label: 'Rename',
+                    isSecondary: true,
+                    onTap: () {
+                      final newName = controller.text.trim();
+                      if (newName.isNotEmpty && newName != oldName) {
+                        final cats = StorageService.categories;
+                        final index = cats.indexOf(oldName);
+                        if (index != -1) {
+                          StorageService.renameCategoryData(oldName, newName);
+                          cats[index] = newName;
+                          StorageService.categories = cats;
+                          FirebaseService.pushAllDataToCloud();
+                          setState(() {});
+                        }
+                        Navigator.pop(context);
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          TextButton(
-            onPressed: () {
-              final newName = controller.text.trim();
-              if (newName.isNotEmpty && newName != oldName) {
-                final cats = StorageService.categories;
-                final index = cats.indexOf(oldName);
-                if (index != -1) {
-                  cats[index] = newName;
-                  StorageService.categories = cats;
-                  // Handle limit migration if needed (StorageService normally uses name as key)
-                  FirebaseService.pushAllDataToCloud();
-                  setState(() {});
-                }
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('Rename', style: TextStyle(color: Color(0xFF8BF7E6))),
-          ),
-        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   void _showAddCategoryDialog() {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add Category'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'Enter category name',
-          ),
+  final controller = TextEditingController();
+  showDialog(
+    context: context,
+    builder: (context) => TransactionDialog(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Add Category',
+              style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 24),
+            GlassInput(
+              controller: controller,
+              hintText: 'Enter category name',
+            ),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                Expanded(
+                  child: GlassButton(
+                    label: 'Cancel',
+                    isSecondary: true,
+                    onTap: () => Navigator.pop(context),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: GlassButton(
+                    label: 'Add',
+                    isSecondary: true,
+                    onTap: () {
+                      final name = controller.text.trim().replaceAll('|', '-');
+                      if (name.isNotEmpty) {
+                        final cats = StorageService.categories;
+                        if (name.toLowerCase() == 'overall') {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("'Overall' is a reserved name")));
+                          return;
+                        }
+                        if (!cats.contains(name)) {
+                          cats.add(name);
+                          StorageService.categories = cats;
+                          FirebaseService.pushAllDataToCloud();
+                          setState(() {});
+                        }
+                        Navigator.pop(context);
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context), 
-            child: const Text('Cancel')
-          ),
-          TextButton(
-            onPressed: () {
-              final name = controller.text.trim().replaceAll('|', '-');
-              if (name.isNotEmpty) {
-                final cats = StorageService.categories;
-                if (name.toLowerCase() == 'overall') {
-                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("'Overall' is a reserved name")));
-                   return;
-                }
-                if (!cats.contains(name)) {
-                  cats.add(name);
-                  StorageService.categories = cats;
-                  FirebaseService.pushAllDataToCloud();
-                  setState(() {});
-                }
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('Add'),
-          ),
-        ],
       ),
-    );
-  }
+    ),
+  );
+}
 }

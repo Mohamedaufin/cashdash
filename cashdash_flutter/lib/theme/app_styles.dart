@@ -28,7 +28,7 @@ class AppStyles {
       colors: [Color(0xFF1A2D8A), Color(0xFF07103D)],
       stops: [0.0, 1.0],
     ),
-    border: Border.all(color: const Color(0xFF4A5FA1), width: 1.5),
+    border: Border.all(color: Colors.white.withOpacity(0.05), width: 1.0),
     boxShadow: const [
       BoxShadow(
         color: Color(0x40000000),

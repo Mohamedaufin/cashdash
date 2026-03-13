@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import '../theme/app_styles.dart';
 
 class DittoDropdown {
@@ -25,64 +26,93 @@ class DittoDropdown {
           ),
           // Gradient Dropdown
           Positioned(
-            left: anchorRect.left,
+            left: () {
+              const double width = 190.0;
+              final screenWidth = MediaQuery.of(context).size.width;
+              if (anchorRect.left + width > screenWidth - 10) {
+                return screenWidth - width - 10;
+              }
+              return anchorRect.left;
+            }(),
             top: anchorRect.bottom + 8,
-            width: 180, // Matches native screenshot scale
+            width: 190,
             child: Material(
               color: Colors.transparent,
               child: TweenAnimationBuilder<double>(
-                duration: const Duration(milliseconds: 200),
+                duration: const Duration(milliseconds: 250),
                 tween: Tween(begin: 0.0, end: 1.0),
+                curve: Curves.easeOutCubic,
                 builder: (context, value, child) {
                   return Opacity(
                     opacity: value,
                     child: Transform.scale(
-                      scale: 0.95 + (0.05 * value),
-                      alignment: Alignment.topLeft,
+                      scale: 0.9 + (0.1 * value),
+                      alignment: Alignment.topCenter,
                       child: child,
                     ),
                   );
                 },
                 child: Container(
-                  decoration: AppStyles.glassInputDecoration.copyWith(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    // Border and Shadow outside ClipRRect ensures they're never cut off
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.35),
+                      width: 1.5,
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.4),
-                        blurRadius: 15,
+                        color: Colors.black.withOpacity(0.45),
+                        blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
                     ],
                   ),
-                  child: Stack(
-                    children: [
-                      AppStyles.glassInputOverlay,
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: items.map((item) {
-                            return InkWell(
-                              onTap: () {
-                                onSelected(item);
-                                overlayEntry.remove();
-                              },
-                              child: Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                child: Text(
-                                  item,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              const Color(0xFF1A2D8A).withOpacity(0.7),
+                              const Color(0xFF07103D).withOpacity(0.85),
+                            ],
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: items.map((item) {
+                              return InkWell(
+                                onTap: () {
+                                  onSelected(item);
+                                  overlayEntry.remove();
+                                },
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+                                  child: Text(
+                                    item,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.5,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            );
-                          }).toList(),
+                              );
+                            }).toList(),
+                          ),
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),

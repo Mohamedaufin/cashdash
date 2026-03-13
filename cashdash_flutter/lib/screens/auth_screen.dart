@@ -5,6 +5,9 @@ import '../services/firebase_service.dart';
 import '../widgets/glass_container.dart';
 import '../splash_screen.dart';
 import '../theme/app_styles.dart';
+import '../components/transaction_dialog.dart';
+import '../components/glass_input.dart';
+import '../components/glass_button.dart';
 
 class AuthScreen extends StatefulWidget {
   final String? adminNotice;
@@ -37,20 +40,71 @@ class _AuthScreenState extends State<AuthScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A2035),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Security Notice', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        content: const Text(
-          'Admin has deleted your account due to privacy concerns. Please register a new account.',
-          style: TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Understood', style: TextStyle(color: Color(0xFF8BF7E6))),
+      builder: (ctx) => TransactionDialog(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.security, color: Colors.orangeAccent, size: 64),
+              const SizedBox(height: 20),
+              const Text(
+                'Security Notice',
+                style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Admin has deleted your account due to privacy concerns. Please register a new account.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Color(0xB3FFFFFF), fontSize: 16, height: 1.4),
+              ),
+              const SizedBox(height: 32),
+              GlassButton(
+                label: 'Understood',
+                isSecondary: true,
+                onTap: () => Navigator.pop(ctx),
+              ),
+            ],
           ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  void _showAuthFeedback({required String title, required String message, bool isError = true}) {
+    showDialog(
+      context: context,
+      builder: (ctx) => TransactionDialog(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isError ? Icons.error_outline : Icons.check_circle_outline,
+                color: isError ? Colors.redAccent : AppColors.neonCyan,
+                size: 64,
+              ),
+              const SizedBox(height: 20),
+              Text(
+                title,
+                style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Color(0xB3FFFFFF), fontSize: 16, height: 1.4),
+              ),
+              const SizedBox(height: 32),
+              GlassButton(
+                label: 'Close',
+                isSecondary: true,
+                onTap: () => Navigator.pop(ctx),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -94,34 +148,55 @@ class _AuthScreenState extends State<AuthScreen> {
                 const SizedBox(height: 50),
                 
                 if (_isSelectionVisible) ...[
-                  _glass3dButton('Login', () {
-                    setState(() {
-                      _isLoginFlow = true;
-                      _isSelectionVisible = false;
-                      _statusMessage = '';
-                    });
-                  }),
+                  GlassButton(
+                    label: 'Login',
+                    onTap: () {
+                      setState(() {
+                        _isLoginFlow = true;
+                        _isSelectionVisible = false;
+                        _statusMessage = '';
+                      });
+                    },
+                  ),
                   const SizedBox(height: 16),
-                  _glass3dButton('Register', () {
-                    setState(() {
-                      _isLoginFlow = false;
-                      _isSelectionVisible = false;
-                      _statusMessage = '';
-                    });
-                  }),
+                  GlassButton(
+                    label: 'Register',
+                    onTap: () {
+                      setState(() {
+                        _isLoginFlow = false;
+                        _isSelectionVisible = false;
+                        _statusMessage = '';
+                      });
+                    },
+                  ),
                 ] else ...[
                   if (!_isLoginFlow) ...[
-                    _glassInput(_nameController, 'Name'),
+                    GlassInput(controller: _nameController, hintText: 'Name'),
                     const SizedBox(height: 20),
-                    _glassInput(_phoneController, 'Phone Number', keyboard: TextInputType.phone),
+                    GlassInput(
+                      controller: _phoneController,
+                      hintText: 'Phone Number',
+                      keyboardType: TextInputType.phone,
+                    ),
                     const SizedBox(height: 20),
                   ],
-                  _glassInput(_emailController, 'Email', keyboard: TextInputType.emailAddress),
+                  GlassInput(
+                    controller: _emailController,
+                    hintText: 'Email',
+                    keyboardType: TextInputType.emailAddress,
+                  ),
                   const SizedBox(height: 20),
-                  _glassInput(_passwordController, 'Password', isPass: true),
+                  GlassInput(
+                    controller: _passwordController,
+                    hintText: 'Password',
+                    obscureText: true,
+                  ),
                   const SizedBox(height: 35),
                   
-                  _glass3dButton(_isLoginFlow ? 'Login' : 'Register', () => _handleAuth(isLogin: _isLoginFlow)),
+                  GlassButton(
+                    label: _isLoginFlow ? 'Login' : 'Register',
+                    onTap: () => _handleAuth(isLogin: _isLoginFlow),
+                  ),
                   
                   const SizedBox(height: 20),
                   GestureDetector(
@@ -151,17 +226,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 
                 const SizedBox(height: 24),
                 if (_isLoading)
-                  const CircularProgressIndicator(color: AppColors.neonCyan)
-                else
-                  Text(
-                    _statusMessage,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: _statusMessage.contains('sent') ? AppColors.neonCyan : AppColors.errorRed,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+                  const CircularProgressIndicator(color: AppColors.neonCyan),
                 const SizedBox(height: 40),
               ],
             ),
@@ -171,101 +236,7 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
-  Widget _glassInput(TextEditingController ctrl, String hint, {bool isPass = false, TextInputType keyboard = TextInputType.text}) {
-    // Map hints to Flutter AutofillHints
-    Iterable<String>? autofill;
-    if (isPass) {
-      autofill = [AutofillHints.password];
-    } else if (keyboard == TextInputType.emailAddress) {
-      autofill = [AutofillHints.email];
-    } else if (keyboard == TextInputType.phone) {
-      autofill = [AutofillHints.telephoneNumber];
-    } else if (hint.toLowerCase().contains('name')) {
-      autofill = [AutofillHints.name];
-    }
-
-    return Container(
-      height: 60,
-      decoration: AppStyles.glassInputDecoration,
-      child: Stack(
-        children: [
-          AppStyles.glassInputOverlay,
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: TextField(
-              controller: ctrl,
-              obscureText: isPass,
-              keyboardType: keyboard,
-              autofillHints: autofill,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
-              decoration: InputDecoration(
-                hintText: hint,
-                hintStyle: const TextStyle(color: Color(0xFF9EB2FF), fontSize: 16),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 18),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _glass3dButton(String label, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 65,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          // Layer 1: Base Glass (bg_glass_3d.xml)
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.white.withOpacity(0.15),
-              Colors.white.withOpacity(0.05),
-            ],
-          ),
-          border: Border.all(color: Colors.white.withOpacity(0.2), width: 1.2),
-        ),
-        child: Stack(
-          children: [
-            // Layer 2: Top Gloss Highlight
-            Positioned(
-              top: 0,
-              left: 2,
-              right: 2,
-              height: 30,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.white.withOpacity(0.15),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            Center(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // REMOVED: Local glass helpers (now using global components)
 
   Future<void> _handleAuth({required bool isLogin}) async {
     final name = _nameController.text.trim();
@@ -274,17 +245,17 @@ class _AuthScreenState extends State<AuthScreen> {
     final pass = _passwordController.text.trim();
 
     if (email.isEmpty || pass.isEmpty) {
-      setState(() => _statusMessage = 'Please fill in email and password');
+      _showAuthFeedback(title: 'Input Required', message: 'Please fill in email and password');
       return;
     }
     
     if (!isLogin && (name.isEmpty || phone.isEmpty)) {
-      setState(() => _statusMessage = 'Please fill in all fields');
+      _showAuthFeedback(title: 'Input Required', message: 'Please fill in all fields');
       return;
     }
 
     if (pass.length < 6) {
-      setState(() => _statusMessage = 'Password must be at least 6 characters');
+      _showAuthFeedback(title: 'Invalid Password', message: 'Password must be at least 6 characters');
       return;
     }
 
@@ -325,16 +296,13 @@ class _AuthScreenState extends State<AuthScreen> {
           }
           // Profile doesn't exist -> Admin deleted. Proceed with registration flow.
         }
-      }
-
-      // Success -> Save Prefs
-      StorageService.userName = name;
-      StorageService.userPhone = phone;
-      StorageService.userPassword = pass;
-      StorageService.isFirstLaunch = false;
-      
-      if (!isLogin) {
-        // PUSH empty data if registering
+        
+        // IMPORTANT: Set name/phone for NEW registration before pushing to cloud
+        StorageService.userName = name;
+        StorageService.userPhone = phone;
+        StorageService.userPassword = pass;
+        StorageService.isFirstLaunch = false;
+        
         await FirebaseService.pushAllDataToCloud();
       }
 
@@ -347,10 +315,11 @@ class _AuthScreenState extends State<AuthScreen> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _statusMessage = e.toString().replaceFirst('Exception: ', '');
-        });
+        setState(() => _isLoading = false);
+        _showAuthFeedback(
+          title: isLogin ? 'Login Failed' : 'Registration Failed',
+          message: e.toString().replaceFirst('Exception: ', ''),
+        );
       }
     }
   }
@@ -358,7 +327,7 @@ class _AuthScreenState extends State<AuthScreen> {
   Future<void> _handleForgotPassword() async {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
-      setState(() => _statusMessage = 'Enter email to reset password');
+      _showAuthFeedback(title: 'Input Required', message: 'Enter email to reset password');
       return;
     }
     
@@ -366,17 +335,17 @@ class _AuthScreenState extends State<AuthScreen> {
     try {
       await FirebaseService.sendPasswordReset(email);
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _statusMessage = 'Reset link sent to $email';
-        });
+        setState(() => _isLoading = false);
+        _showAuthFeedback(
+          title: 'Reset Link Sent',
+          message: 'Please check your inbox at $email',
+          isError: false,
+        );
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _statusMessage = 'Failed to send reset link';
-        });
+        setState(() => _isLoading = false);
+        _showAuthFeedback(title: 'Error', message: 'Failed to send reset link');
       }
     }
   }

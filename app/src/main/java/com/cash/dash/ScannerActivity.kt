@@ -38,6 +38,7 @@ class ScannerActivity : AppCompatActivity() {
 
     private val CAMERA_REQUEST = 101
     private val GALLERY_PICK = 102
+    private val CONTACT_PICK = 103
     private val PAYMENT_REQ = 500
 
     private lateinit var previewView: PreviewView
@@ -48,6 +49,7 @@ class ScannerActivity : AppCompatActivity() {
     // Pending transaction state for Result Tracking
     private var pendingAmount: Int = 0
     private var pendingCategory: String? = null
+    private var pendingContactName: String? = null
     private var pendingTitle: String = "UPI Payment"
     private var pendingUpi: String? = null
     private var allocationHandled: Boolean = false
@@ -81,6 +83,7 @@ class ScannerActivity : AppCompatActivity() {
         val btnClose = findViewById<ImageButton>(R.id.btnCloseScanner)
         val btnGallery = findViewById<ImageButton>(R.id.btnGallery)
         val btnHistory = findViewById<ImageButton>(R.id.btnHistory)
+        val btnPayContact = findViewById<ImageButton>(R.id.btnPayContact)
         
         previewView = findViewById(R.id.previewView)
 
@@ -110,6 +113,13 @@ class ScannerActivity : AppCompatActivity() {
             } else {
                 ToastHelper.showToast(this, "No previous scan history found")
             }
+        }
+
+        btnPayContact.setOnClickListener {
+            if (::cameraProvider.isInitialized) {
+                cameraProvider.unbindAll()
+            }
+            showContactPayDialog()
         }
 
         swipeDetector = android.view.GestureDetector(this, object : android.view.GestureDetector.SimpleOnGestureListener() {
@@ -177,6 +187,29 @@ class ScannerActivity : AppCompatActivity() {
 
         if (req == GALLERY_PICK && res == Activity.RESULT_OK) {
             data?.data?.let { scanGalleryQR(it) }
+        }
+
+        if (req == CONTACT_PICK && res == Activity.RESULT_OK && data != null) {
+            val contactUri: Uri = data.data ?: return
+            val projection = arrayOf(
+                android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER,
+                android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
+            )
+            contentResolver.query(contactUri, projection, null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val numberIndex = cursor.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER)
+                    val nameIndex = cursor.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+                    
+                    var number = cursor.getString(numberIndex).replace(" ", "").replace("-", "")
+                    if (number.startsWith("+91")) number = number.substring(3)
+                    if (number.length > 10) number = number.takeLast(10)
+                    
+                    val name = cursor.getString(nameIndex)
+                    
+                    pendingContactName = name
+                    activePhoneField?.setText(number)
+                }
+            }
         }
     }
 
@@ -299,7 +332,14 @@ class ScannerActivity : AppCompatActivity() {
         allocationHandled = false
 
         val tvInfo = view.findViewById<TextView>(R.id.tvReceiverInfo)
-        tvInfo.text = "Receiver: $name\nUPI ID: $id"
+        
+        // Hide UPI ID text if it's a phone number based payment
+        val isPhonePayment = id.endsWith("@upi") && id.length <= 14 // Simple check for phone@upi
+        if (isPhonePayment) {
+            tvInfo.text = "Receiver: $name"
+        } else {
+            tvInfo.text = "Receiver: $name\nUPI ID: $id"
+        }
 
         val etAmount = view.findViewById<EditText>(R.id.etPaymentAmount)
         val tvAllocation = view.findViewById<TextView>(R.id.tvAllocationLabel)
@@ -310,6 +350,12 @@ class ScannerActivity : AppCompatActivity() {
         
         val paymentActionContainer = view.findViewById<LinearLayout>(R.id.paymentActionContainer)
         val btnPayInitiate = view.findViewById<Button>(R.id.btnPayInitiate)
+        val tvWalletBalance = view.findViewById<TextView>(R.id.tvWalletBalance)
+
+        // Set Wallet Balance
+        val walletPrefs = getSharedPreferences("WalletPrefs", MODE_PRIVATE)
+        val balance = walletPrefs.getInt("wallet_balance", 0)
+        tvWalletBalance.text = "Wallet Balance: ₹$balance"
 
         // Show CRED and GPay for all transactions natively
         btnCred.visibility = View.VISIBLE
@@ -375,6 +421,112 @@ class ScannerActivity : AppCompatActivity() {
             ToastHelper.showToast(this, "⚠ Error opening payment dialog")
         }
     }
+
+    private fun showContactPayDialog() {
+        activePhoneField = null
+        
+        val inputPhone = EditText(this).apply {
+            hint = "Enter 10-digit Phone Number"
+            inputType = android.text.InputType.TYPE_CLASS_PHONE
+            setTextColor(Color.WHITE)
+            setHintTextColor(Color.parseColor("#A8B5D1"))
+            background = ContextCompat.getDrawable(context, R.drawable.bg_glass_input)
+            setPadding(30, 30, 30, 30)
+            filters = arrayOf(android.text.InputFilter.LengthFilter(10))
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 140).apply {
+                setMargins(0, 0, 0, 10)
+            }
+        }
+        activePhoneField = inputPhone
+
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundResource(R.drawable.bg_transaction)
+            setPadding(35, 80, 35, 0) // No horizontal padding for corners
+
+            val titleView = TextView(context).apply {
+                text = "Pay Contact"
+                textSize = 24f // Slightly larger title
+                setTextColor(Color.WHITE)
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                gravity = android.view.Gravity.CENTER
+                setPadding(80, 0, 80, 80) // Re-added horizontal padding here
+            }
+            addView(titleView)
+
+            addView(inputPhone)
+
+            val tvAddFromContacts = TextView(context).apply {
+                text = "Pick number from contacts"
+                textSize = 17f
+                setTextColor(Color.parseColor("#8BF7E6"))
+                paintFlags = paintFlags or android.graphics.Paint.UNDERLINE_TEXT_FLAG
+                setPadding(30, 20, 30, 40) // Standard horizontal padding for alignment
+                setOnClickListener {
+                    if (ContextCompat.checkSelfPermission(this@ScannerActivity, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+                        ActivityCompat.requestPermissions(this@ScannerActivity, arrayOf(Manifest.permission.READ_CONTACTS), 104)
+                    } else {
+                        val intent = Intent(Intent.ACTION_PICK, android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI)
+                        startActivityForResult(intent, CONTACT_PICK)
+                    }
+                }
+            }
+            addView(tvAddFromContacts)
+
+            // Container for the arrow to position it at the absolute end
+            val arrowContainer = FrameLayout(context).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                setPadding(0, 0, 0, 50) // Removed right padding (was 30)
+            }
+
+            val btnNextArrow = ImageButton(context).apply {
+                setImageResource(R.drawable.ic_back_arrow1)
+                rotation = 180f
+                background = ContextCompat.getDrawable(context, R.drawable.bg_glass_3d_round)
+                setPadding(32, 32, 32, 32)
+                setColorFilter(Color.WHITE)
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                layoutParams = FrameLayout.LayoutParams(160, 160).apply {
+                    gravity = android.view.Gravity.END
+                    setMargins(0, 0, -20, 0) // Negative margin to push closer to absolute edge
+                }
+                setOnClickListener {
+                    val phone = inputPhone.text.toString().trim()
+                    if (phone.length == 10) {
+                        scannedOnce = true
+                        val finalName = pendingContactName ?: "Check your UPI app for Account Holder Name"
+                        val upiUri = "upi://pay?pa=$phone@upi&pn=${java.net.URLEncoder.encode(finalName, "UTF-8")}"
+                        activeContactDialog?.dismiss()
+                        showAmountDialog(upiUri)
+                    } else {
+                        ToastHelper.showToast(this@ScannerActivity, "Please enter 10-digit number")
+                    }
+                }
+            }
+            arrowContainer.addView(btnNextArrow)
+            addView(arrowContainer)
+        }
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(box)
+            .create()
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        dialog.setOnDismissListener {
+            if (!scannedOnce) if (::cameraProvider.isInitialized) startScanner()
+        }
+
+        activeContactDialog = dialog
+        dialog.show()
+    }
+
+    private var activeContactDialog: AlertDialog? = null
+    private var activePhoneField: EditText? = null
+
+    // verifyUPI removed as per user request to remove verification logic
 
     private fun showAllocationChooser(parentDialog: BottomSheetDialog, label: TextView, btn: Button, paymentContainer: LinearLayout, btnPayInit: Button) {
         val chooser = BottomSheetDialog(this, R.style.BottomSheetDialogTheme)

@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_colors.dart';
+import '../components/transaction_dialog.dart';
+import '../components/glass_button.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -154,28 +156,15 @@ class _NotificationScreenState extends State<NotificationScreen> {
   void _showDeleteDialog(DocumentSnapshot doc, VoidCallback onCancel) {
     showDialog(
       context: context,
-      barrierColor: Colors.black54,
       builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 30),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E2642),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withOpacity(0.15), width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.5),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                )
-              ],
-            ),
+        return TransactionDialog(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                const Icon(Icons.delete_outline, color: Colors.redAccent, size: 48),
+                const SizedBox(height: 16),
                 const Text(
                   'Delete query?',
                   style: TextStyle(
@@ -184,7 +173,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 15),
+                const SizedBox(height: 12),
                 const Text(
                   'Remove this query from your history?',
                   textAlign: TextAlign.center,
@@ -193,22 +182,24 @@ class _NotificationScreenState extends State<NotificationScreen> {
                     color: Color(0xFFA0A0A0),
                   ),
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 32),
                 Row(
                   children: [
                     Expanded(
-                      child: _glassButton(
-                        'Cancel',
+                      child: GlassButton(
+                        label: 'Cancel',
+                        isSecondary: true,
                         onTap: () {
                           Navigator.pop(context);
                           onCancel();
                         },
                       ),
                     ),
-                    const SizedBox(width: 15),
+                    const SizedBox(width: 16),
                     Expanded(
-                      child: _glassButton(
-                        'Delete',
+                      child: GlassButton(
+                        label: 'Delete',
+                        color: Colors.redAccent,
                         onTap: () {
                           Navigator.pop(context);
                           _deleteNotification(doc);
@@ -225,29 +216,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
     );
   }
 
-  Widget _glassButton(String label, {required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 50,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: Colors.white.withOpacity(0.08),
-          border: Border.all(color: Colors.white.withOpacity(0.15), width: 1),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  // REMOVED: Local _glassButton helper
 
   List<DocumentSnapshot> get _filteredDocs {
     if (_currentFilter == 'responded') {
@@ -497,28 +466,15 @@ class _NotificationScreenState extends State<NotificationScreen> {
             // but we can wrap it in a Completer or just use showDialog correctly:
             final bool? result = await showDialog<bool>(
               context: context,
-               barrierColor: Colors.black54,
               builder: (BuildContext context) {
-                return Dialog(
-                  backgroundColor: Colors.transparent,
-                  insetPadding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 30),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1E2642),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: Colors.white.withOpacity(0.15), width: 1.5),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.5),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        )
-                      ],
-                    ),
+                return TransactionDialog(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        const Icon(Icons.delete_outline, color: Colors.redAccent, size: 48),
+                        const SizedBox(height: 16),
                         const Text(
                           'Delete query?',
                           style: TextStyle(
@@ -527,7 +483,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 15),
+                        const SizedBox(height: 12),
                         const Text(
                           'Remove this query from your history?',
                           textAlign: TextAlign.center,
@@ -536,19 +492,21 @@ class _NotificationScreenState extends State<NotificationScreen> {
                             color: Color(0xFFA0A0A0),
                           ),
                         ),
-                        const SizedBox(height: 30),
+                        const SizedBox(height: 32),
                         Row(
                           children: [
                             Expanded(
-                              child: _glassButton(
-                                'Cancel',
+                              child: GlassButton(
+                                label: 'Cancel',
+                                isSecondary: true,
                                 onTap: () => Navigator.of(context).pop(false),
                               ),
                             ),
-                            const SizedBox(width: 15),
+                            const SizedBox(width: 16),
                             Expanded(
-                              child: _glassButton(
-                                'Delete',
+                              child: GlassButton(
+                                label: 'Delete',
+                                color: Colors.redAccent,
                                 onTap: () => Navigator.of(context).pop(true),
                               ),
                             ),

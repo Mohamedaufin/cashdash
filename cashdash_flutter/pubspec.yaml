@@ -48,6 +48,7 @@ dependencies:
   visibility_detector: ^0.4.0+2
   http: ^1.6.0
   flutter_widget_from_html: ^0.16.1
+  webview_flutter: ^4.10.0
 
 dev_dependencies:
   flutter_test:

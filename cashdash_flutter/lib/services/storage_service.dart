@@ -51,6 +51,43 @@ class StorageService {
   static int getCategoryLimit(String category) => _prefs.getInt('LIMIT_$category') ?? 0;
   static void setCategoryLimit(String category, int limit) => _prefs.setInt('LIMIT_$category', limit);
 
+  static Future<void> renameCategoryData(String oldName, String newName) async {
+    final limit = getCategoryLimit(oldName);
+    final spent = getCategorySpent(oldName);
+
+    if (limit != 0) {
+      await _prefs.setInt('LIMIT_$newName', limit);
+      await _prefs.remove('LIMIT_$oldName');
+    }
+    if (spent != 0.0) {
+      await _prefs.setDouble('SPENT_$newName', spent);
+      await _prefs.remove('SPENT_$oldName');
+    }
+
+    // Update History List to prevent duplicates with old names
+    final history = historyList;
+    bool updated = false;
+    for (int i = 0; i < history.length; i++) {
+      final entry = history[i];
+      final parts = entry.split('|');
+      if (parts.length >= 4) {
+        // ATSTMT|category|amount|... or EXP|timestamp|title|category|...
+        if (parts[0] == 'ATSTMT' && parts[1] == oldName) {
+          parts[1] = newName;
+          history[i] = parts.join('|');
+          updated = true;
+        } else if (parts[0] == 'EXP' && parts[3] == oldName) {
+          parts[3] = newName;
+          history[i] = parts.join('|');
+          updated = true;
+        }
+      }
+    }
+    if (updated) {
+      historyList = history;
+    }
+  }
+
   // GraphData / Spending
   static double getCategorySpent(String category) => _prefs.getDouble('SPENT_$category') ?? 0.0;
   static void setCategorySpent(String category, double spent) => _prefs.setDouble('SPENT_$category', spent);

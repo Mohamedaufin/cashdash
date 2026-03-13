@@ -42,16 +42,19 @@ class _HomeContentState extends State<HomeContent> {
       child: SingleChildScrollView( 
         child: Column(
           children: [
-            const SizedBox(height: 64), 
+            const SizedBox(height: 54), 
             _buildTopBar(context),
             
             const SizedBox(height: 15), 
-            Text(
-              nextMoneyStr,
-              style: const TextStyle(
-                color: Color(0xFFB0C8FF),
-                fontSize: 18,
-                shadows: [Shadow(color: Color(0xFF1A2D8A), offset: Offset(0, 2), blurRadius: 8)],
+            Transform.translate(
+              offset: const Offset(0, 15), // Move text ~1 inch down
+              child: Text(
+                nextMoneyStr,
+                style: const TextStyle(
+                  color: Color(0xFFB0C8FF),
+                  fontSize: 18,
+                  shadows: [Shadow(color: Color(0xFF1A2D8A), offset: Offset(0, 2), blurRadius: 8)],
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -73,51 +76,63 @@ class _HomeContentState extends State<HomeContent> {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center, // Already center, but ensuring
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    PageRouteBuilder(
-                      pageBuilder: (context, animation, secondaryAnimation) => const MenuScreen(),
-                      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                        return FadeTransition(opacity: animation, child: child);
-                      },
-                    ),
-                  );
-                },
-                child: const GlassMenuIcon(size: 32),
-              ),
-              const SizedBox(width: 8),
-              Hero(
-                tag: 'greeting_text_transition',
-                child: Material(
-                  color: Colors.transparent,
-                  child: Text(
-                    'Hello ${StorageService.userName?? "User"},',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 23,
-                      fontWeight: FontWeight.bold,
-                      shadows: [Shadow(color: Color(0xFF3A6AFF), offset: Offset(0, 2), blurRadius: 6)],
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) => const MenuScreen(),
+                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                          return FadeTransition(opacity: animation, child: child);
+                        },
+                      ),
+                    );
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.only(top: 2), // Visual nudge for alignment
+                    child: GlassMenuIcon(size: 30),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Hero(
+                    tag: 'greeting_text_transition',
+                    child: Material(
+                      color: Colors.transparent,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 4), // Aligned with icon center
+                        child: Text(
+                          'Hello ${StorageService.userName ?? "User"},',
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            shadows: [Shadow(color: Color(0xFF3A6AFF), offset: Offset(0, 2), blurRadius: 6)],
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+          const SizedBox(width: 8),
           GestureDetector(
             onTap: () {
               Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen()));
             },
             child: Image.asset(
               'assets/icons/ic_profile.png',
-              width: 48,
-              height: 48,
+              width: 44,
+              height: 44,
               fit: BoxFit.contain,
             ),
           ),
@@ -180,13 +195,13 @@ class _HomeContentState extends State<HomeContent> {
           _buildActionCard(
             'Scanner', 
             'assets/icons/ic_scanner.png', 
-            110, 77, 
+            86, 60, 
             () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ScannerScreen()))
           ),
           _buildActionCard(
             'Rigor Tracker', 
             'assets/icons/ic_rigor_tracker.png', 
-            103, 75,
+            80, 58,
             () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RigorScreen()))
           ),
         ],
@@ -199,24 +214,28 @@ class _HomeContentState extends State<HomeContent> {
       onTap: onTap,
       child: ThreeDCard(
         width: 120,
-        height: 110,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(assetPath, width: iconW, height: iconH, fit: BoxFit.contain),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                shadows: [
-                  Shadow(color: Color(0xFF000C40), offset: Offset(0, 2), blurRadius: 4),
-                ],
+        height: 115,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center, // Centering icons and text
+            children: [
+              Image.asset(assetPath, width: iconW, height: iconH, fit: BoxFit.contain),
+              const SizedBox(height: 10),
+              Text(
+                title,
+                textAlign: TextAlign.center, // Ensure multi-line if any is centered
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  shadows: [
+                    Shadow(color: Color(0xFF000C40), offset: Offset(0, 2), blurRadius: 4),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

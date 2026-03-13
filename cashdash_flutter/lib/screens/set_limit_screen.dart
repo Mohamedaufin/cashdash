@@ -81,12 +81,10 @@ class _SetLimitScreenState extends State<SetLimitScreen> {
         decoration: const BoxDecoration(
           gradient: AppColors.mainBackgroundGradient,
         ),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
                 child: Column(
                   children: [
                     const SizedBox(height: 35),
@@ -94,12 +92,12 @@ class _SetLimitScreenState extends State<SetLimitScreen> {
                     const SizedBox(height: 20),
                     _buildAmountDisplayBox(),
                     const SizedBox(height: 40),
-                    _buildNumberPad(),
                   ],
                 ),
               ),
-            );
-          },
+            ),
+            _buildNumberPad(),
+          ],
         ),
       ),
     );
@@ -179,16 +177,19 @@ class _SetLimitScreenState extends State<SetLimitScreen> {
           GlassContainer(
             height: 100,
             borderRadius: 18,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text('₹', style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold)),
-                const SizedBox(width: 10),
-                Text(
-                  _currentAmount.isEmpty ? '0' : _currentAmount,
-                  style: const TextStyle(color: Colors.white, fontSize: 44, fontWeight: FontWeight.bold),
-                ),
-              ],
+            child: Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Text('₹', style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 10),
+                  Text(
+                    _currentAmount.isEmpty ? '0' : _currentAmount,
+                    style: const TextStyle(color: Colors.white, fontSize: 44, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 25),
@@ -225,6 +226,7 @@ class _SetLimitScreenState extends State<SetLimitScreen> {
     final isExceeded = val > maxAllowed;
 
     return Container(
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.black.withOpacity(0.3),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),

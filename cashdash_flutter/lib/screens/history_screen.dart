@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
 import '../widgets/glass_container.dart';
 import '../components/history_graph.dart';
 import '../services/history_service.dart';
@@ -23,6 +24,8 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProviderStateMixin {
   String _mode = 'DAILY'; // DAILY, WEEKLY, MONTHLY
   DateTime _selectedDate = DateTime.now();
+  int _selectedWeek = 0; // 0-indexed week of month
+  int _forcedHighlightDay = -1;
   String? _filterCategory;
   late AnimationController _animationController;
 
@@ -33,6 +36,18 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
       vsync: this,
       duration: const Duration(milliseconds: 250),
     );
+    
+    // Default to current date and current week index
+    final now = DateTime.now();
+    _selectedDate = now;
+    final firstOfMonth = DateTime(now.year, now.month, 1);
+    // Correct week index logic: (day + firstDayOffset - 1) / 7
+    _selectedWeek = ((now.day + firstOfMonth.weekday - 2) / 7).floor();
+    
+    // Highlight today by default (0-6 index, Mon-Sun)
+    // DateTime.weekday is 1-7 (Mon-Sun). Convert to 0-6.
+    _forcedHighlightDay = now.weekday - 1;
+    
     _animationController.forward(from: 0.0);
   }
 
@@ -55,36 +70,45 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
 
     for (var entry in history) {
       final p = entry.split('|');
-      if (p.length < 5) continue;
+      if (p.isEmpty) continue;
 
-      final category = p[3];
-      final amount = double.tryParse(p[4]) ?? 0.0;
-      final timestamp = int.tryParse(p[1]) ?? 0;
+      double amount = 0.0;
+      int hWeek = 0, hDay = 0, hMonth = 0, hYear = 0;
+      String category = 'no choice';
+
+      if (p.length == 7) {
+        // ATSTMT|category|amount|week|day|month|year
+        category = p[1];
+        amount = double.tryParse(p[2]) ?? 0.0;
+        hWeek = int.tryParse(p[3]) ?? 0;
+        hDay = int.tryParse(p[4]) ?? 0;
+        hMonth = int.tryParse(p[5]) ?? 0;
+        hYear = int.tryParse(p[6]) ?? 0;
+      } else if (p.length >= 9) {
+        // EXP|timestamp|title|category|amount|week|day|month|year
+        category = p[3];
+        amount = double.tryParse(p[4]) ?? 0.0;
+        hWeek = int.tryParse(p[5]) ?? 0;
+        hDay = int.tryParse(p[6]) ?? 0;
+        hMonth = int.tryParse(p[7]) ?? 0;
+        hYear = int.tryParse(p[8]) ?? 0;
+      } else continue;
 
       if (_filterCategory != null && category != _filterCategory) continue;
 
-      final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
-      if (date.year != _selectedDate.year) continue;
+      if (hYear == _selectedDate.year) {
+        // Monthly accumulator
+        monthlyMap[hMonth] = (monthlyMap[hMonth] ?? 0.0) + amount;
 
-      // Month Index
-      final hMonth = date.month - 1;
-      monthlyMap[hMonth] = (monthlyMap[hMonth] ?? 0.0) + amount;
+        if (hMonth == _selectedDate.month - 1) {
+          // Weekly accumulator
+          weeklyMap[hWeek] = (weeklyMap[hWeek] ?? 0.0) + amount;
 
-      if (hMonth == _selectedDate.month - 1) {
-        // Week Index
-        final firstOfMonth = DateTime(date.year, date.month, 1);
-        final hWeek = ((date.day + firstOfMonth.weekday - 2) / 7).floor();
-        weeklyMap[hWeek] = (weeklyMap[hWeek] ?? 0.0) + amount;
-
-        // Day Index (Mon=0)
-        final mondayOfSelected = _getMondayOfDate(_selectedDate);
-        final sundayOfSelected = mondayOfSelected.add(const Duration(days: 6));
-        
-        // We only care about the day index if it falls within the visible week of _selectedDate
-        if (date.isAfter(mondayOfSelected.subtract(const Duration(seconds: 1))) && 
-            date.isBefore(sundayOfSelected.add(const Duration(seconds: 1)))) {
-           final hDay = date.weekday - 1;
-           dailyMap[hDay] = (dailyMap[hDay] ?? 0.0) + amount;
+          if (hWeek == _selectedWeek) {
+            // Daily accumulator
+            final hDayMonIndex = hDay; // hDay is already 0-6 (Mon-Sun)
+            dailyMap[hDayMonIndex] = (dailyMap[hDayMonIndex] ?? 0.0) + amount;
+          }
         }
       }
     }
@@ -93,7 +117,8 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
       return List.generate(7, (i) => dailyMap[i] ?? 0.0);
     } else if (_mode == 'WEEKLY') {
       final firstOfMonth = DateTime(_selectedDate.year, _selectedDate.month, 1);
-      final totalWeeks = ((firstOfMonth.weekday - 1 + DateTime(_selectedDate.year, _selectedDate.month + 1, 0).day) / 7).ceil();
+      final lastDay = DateTime(_selectedDate.year, _selectedDate.month + 1, 0).day;
+      final totalWeeks = ((firstOfMonth.weekday - 1 + lastDay) / 7).ceil();
       return List.generate(totalWeeks, (i) => weeklyMap[i] ?? 0.0);
     } else {
       return List.generate(12, (i) => monthlyMap[i] ?? 0.0);
@@ -102,48 +127,75 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
 
   List<String> _getGraphLabels() {
     if (_mode == 'DAILY') {
-      final List<String> dates = [];
-      final monday = _getMondayOfDate(_selectedDate);
+      final List<String> labels = [];
+      // Sunday-Saturday or Monday-Sunday? Native seems to use custom labels.
+      // updateDailyLabels in native uses Monday as start.
+      final firstOfMonth = DateTime(_selectedDate.year, _selectedDate.month, 1);
+      // Start of the selected week
+      DateTime cal = DateTime(_selectedDate.year, _selectedDate.month, 1);
+      // Move to Monday of the selected week
+      int skipDays = (_selectedWeek * 7) - (firstOfMonth.weekday - 1);
+      DateTime weekStart = firstOfMonth.add(Duration(days: skipDays));
+
       for (int i = 0; i < 7; i++) {
-        final d = monday.add(Duration(days: i));
+        DateTime d = weekStart.add(Duration(days: i));
         if (d.month == _selectedDate.month) {
-          dates.add(DateFormat('dd/MM').format(d));
+          labels.add(DateFormat('dd/MM').format(d));
         } else {
-          dates.add(""); // Day belongs to another month
+          labels.add(""); 
         }
       }
-      return dates;
+      return labels;
     }
     if (_mode == 'WEEKLY') {
-      final List<String> ranges = [];
+      final List<String> labels = [];
       final firstOfMonth = DateTime(_selectedDate.year, _selectedDate.month, 1);
-      final totalWeeks = ((firstOfMonth.weekday - 1 + DateTime(_selectedDate.year, _selectedDate.month + 1, 0).day) / 7).ceil();
-      
+      final lastDay = DateTime(_selectedDate.year, _selectedDate.month + 1, 0).day;
+      final totalWeeks = ((firstOfMonth.weekday - 1 + lastDay) / 7).ceil();
+
       for (int w = 0; w < totalWeeks; w++) {
         // Start of week: Monday or 1st
-        DateTime start = firstOfMonth.add(Duration(days: w * 7 - (firstOfMonth.weekday - 1)));
-        if (start.month != firstOfMonth.month) start = firstOfMonth;
-        
+        int startDayOffset = (w * 7) - (firstOfMonth.weekday - 1);
+        DateTime start = firstOfMonth.add(Duration(days: max(0, startDayOffset)));
+        if (start.month != _selectedDate.month) start = firstOfMonth;
+
         // End of week: Sunday or last day
-        DateTime end = start.add(Duration(days: 6 - (start == firstOfMonth ? 0 : 0))); // Simple approx
-        // Refine end to match native: Sunday of that week or last day of month
-        DateTime sunday = firstOfMonth.add(Duration(days: w * 7 + (7 - firstOfMonth.weekday)));
-        if (sunday.month != firstOfMonth.month) sunday = DateTime(firstOfMonth.year, firstOfMonth.month + 1, 0);
-        
-        ranges.add("${DateFormat('dd/MM').format(start)}-${DateFormat('dd/MM').format(sunday)}");
+        int endDayOffset = (w * 7) + (7 - firstOfMonth.weekday);
+        DateTime end = firstOfMonth.add(Duration(days: min(lastDay - 1, endDayOffset)));
+        if (end.month != _selectedDate.month) {
+           end = DateTime(_selectedDate.year, _selectedDate.month + 1, 0);
+        }
+
+        // Simplified range to avoid clash: "01-07"
+        labels.add("${DateFormat('dd').format(start)}-${DateFormat('dd').format(end)}");
       }
-      return ranges;
+      return labels;
     }
     return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   }
 
   int _getSelectedIndex() {
-    if (_mode == 'DAILY') return _selectedDate.weekday - 1; // Mon=0, Sun=6
-    if (_mode == 'WEEKLY') {
-       final firstOfMonth = DateTime(_selectedDate.year, _selectedDate.month, 1);
-       return ((_selectedDate.day + firstOfMonth.weekday - 2) / 7).floor();
+    if (_mode == 'DAILY') {
+       if (_forcedHighlightDay != -1) return _forcedHighlightDay;
+       final now = DateTime.now();
+       if (_selectedDate.year == now.year && _selectedDate.month == now.month) {
+          final firstOfMonth = DateTime(now.year, now.month, 1);
+          final currentWeek = ((now.day + firstOfMonth.weekday - 2) / 7).floor();
+          if (currentWeek == _selectedWeek) return now.weekday - 1;
+       }
+       return -1;
     }
-    return _selectedDate.month - 1;
+    if (_mode == 'WEEKLY') {
+       final now = DateTime.now();
+       if (_selectedDate.year == now.year && _selectedDate.month == now.month) {
+          final firstOfMonth = DateTime(now.year, now.month, 1);
+          return ((now.day + firstOfMonth.weekday - 2) / 7).floor();
+       }
+       return -1;
+    }
+    final now = DateTime.now();
+    if (_selectedDate.year == now.year) return now.month - 1;
+    return -1;
   }
 
   Widget _buildGraphSection() {
@@ -169,43 +221,43 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
             setState(() {
               _mode = 'WEEKLY';
               _selectedDate = DateTime(_selectedDate.year, index + 1, 1);
+              // Match native: default to week 0, or current week if it's current month
+              final now = DateTime.now();
+              if (now.year == _selectedDate.year && now.month == _selectedDate.month) {
+                final firstOfMonth = DateTime(now.year, now.month, 1);
+                _selectedWeek = ((now.day + firstOfMonth.weekday - 2) / 7).floor();
+              } else {
+                _selectedWeek = 0;
+              }
+              _forcedHighlightDay = -1;
               _animationController.forward(from: 0.0);
             });
           } else if (_mode == 'WEEKLY') {
             setState(() {
               _mode = 'DAILY';
-              // Find the start of the week for the selected month
-              final firstOfMonth = DateTime(_selectedDate.year, _selectedDate.month, 1);
-              final startOfWeek = firstOfMonth.subtract(Duration(days: firstOfMonth.weekday - 1));
-              _selectedDate = startOfWeek.add(Duration(days: index * 7));
-              // Ensure we stay within the month if native does that
-              if (_selectedDate.month != firstOfMonth.month && index == 0) {
-                 _selectedDate = firstOfMonth;
-              }
+              _selectedWeek = index;
+              _forcedHighlightDay = -1;
               _animationController.forward(from: 0.0);
             });
           } else {
             // DAILY -> Breakdown
-            final monday = _getMondayOfDate(_selectedDate);
-            final actualDate = monday.add(Duration(days: index));
+            final firstOfMonth = DateTime(_selectedDate.year, _selectedDate.month, 1);
+            int skipDays = (_selectedWeek * 7) - (firstOfMonth.weekday - 1);
+            DateTime weekStart = firstOfMonth.add(Duration(days: skipDays));
+            DateTime actualDate = weekStart.add(Duration(days: index));
             
-            final firstOfMonth = DateTime(actualDate.year, actualDate.month, 1);
-            final day = actualDate.day - 1;
-            final week = ((actualDate.day + firstOfMonth.weekday - 2) / 7).floor();
-            final month = actualDate.month - 1;
-            final year = actualDate.year;
-            
-            setState(() => _selectedDate = actualDate);
+            // Native ignores clicks on empty labels (days belonging to other months)
+            if (actualDate.month != _selectedDate.month) return;
 
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => DetailHistoryScreen(
                   mode: _mode,
-                  week: week,
-                  day: day,
-                  month: month,
-                  year: year,
+                  year: actualDate.year,
+                  month: actualDate.month - 1,
+                  week: _selectedWeek,
+                  day: index, // Send 0-6 index for matching
                 ),
               ),
             );
@@ -226,7 +278,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
           children: [
             Column(
               children: [
-                const SizedBox(height: 50),
+                const SizedBox(height: 30),
                 _buildHeader(),
                 _buildTopControls(),
                 Expanded(
@@ -251,6 +303,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
               bottom: 0,
               child: GlassBottomNavBar(
                 selectedIndex: 2,
+                scrollPosition: 2.0,
                 onTabSelected: (index) {
                   if (index == 0) {
                     Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AllocatorScreen()));
@@ -325,10 +378,31 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
 
 
   String _getShortDateLabel() {
-     if (_mode == 'DAILY') {
-      return DateFormat('dd/MM/yyyy').format(_selectedDate);
+    if (_mode == 'DAILY') {
+      final now = DateTime.now();
+      // If currently looking at "Today" (current year, month, day), show full date
+      if (_selectedDate.year == now.year &&
+          _selectedDate.month == now.month &&
+          (_forcedHighlightDay == -1 || _forcedHighlightDay == now.weekday - 1)) {
+        return DateFormat('MMMM d, yyyy').format(now);
+      }
+      // If we've picked a specific day via DatePicker or BarTap
+      if (_forcedHighlightDay != -1) {
+        final firstOfMonth = DateTime(_selectedDate.year, _selectedDate.month, 1);
+        int skipDays = (_selectedWeek * 7) - (firstOfMonth.weekday - 1);
+        DateTime weekStart = firstOfMonth.add(Duration(days: skipDays));
+        DateTime actual = weekStart.add(Duration(days: _forcedHighlightDay));
+        // If it's still today's day but forced, show full date
+        if (actual.year == now.year && actual.month == now.month && actual.day == now.day) {
+           return DateFormat('MMMM d, yyyy').format(actual);
+        }
+        return DateFormat('MMMM d, yyyy').format(actual);
+      }
+      
+      // Default for Daily: Month Year (if not looking at today)
+      return DateFormat('MMMM yyyy').format(_selectedDate);
     } else if (_mode == 'WEEKLY') {
-      return 'Week ${((_selectedDate.day - 1) / 7).floor() + 1}';
+      return 'Week ${_selectedWeek + 1}';
     } else {
       return _selectedDate.year.toString();
     }
@@ -374,6 +448,16 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
       onSelected: (m) {
         setState(() {
           _mode = m.toUpperCase();
+          _forcedHighlightDay = -1;
+          if (_mode == 'WEEKLY') {
+             final now = DateTime.now();
+             if (now.year == _selectedDate.year && now.month == _selectedDate.month) {
+                final firstOfMonth = DateTime(now.year, now.month, 1);
+                _selectedWeek = ((now.day + firstOfMonth.weekday - 2) / 7).floor();
+             } else {
+                _selectedWeek = 0;
+             }
+          }
           _animationController.forward(from: 0.0);
         });
       },
@@ -423,8 +507,18 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
           );
         },
       );
-      if (picked != null && picked != _selectedDate) {
-        setState(() => _selectedDate = picked);
+      if (picked != null) {
+        setState(() {
+          _selectedDate = picked;
+          final firstOfMonth = DateTime(picked.year, picked.month, 1);
+          _selectedWeek = ((picked.day + firstOfMonth.weekday - 2) / 7).floor();
+          
+          if (_mode == 'DAILY') {
+            _forcedHighlightDay = picked.weekday - 1;
+          } else {
+            _forcedHighlightDay = -1;
+          }
+        });
       }
     }
   }

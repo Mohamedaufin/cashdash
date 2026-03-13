@@ -3,11 +3,13 @@ import '../theme/app_colors.dart';
 
 class GlassBottomNavBar extends StatelessWidget {
   final int selectedIndex;
+  final double scrollPosition;
   final Function(int) onTabSelected;
 
   const GlassBottomNavBar({
     super.key,
     required this.selectedIndex,
+    required this.scrollPosition,
     required this.onTabSelected,
   });
 
@@ -24,7 +26,6 @@ class GlassBottomNavBar extends StatelessWidget {
       child: Stack(
         children: [
           // 3D background matching bg_3d_bottom_nav.xml
-          // Layer 1: Glossy transition
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -34,7 +35,6 @@ class GlassBottomNavBar extends StatelessWidget {
               ),
             ),
           ),
-          // Layer 2: Main Body (shifted 2dp down)
           Positioned(
             top: 2,
             left: 0,
@@ -75,35 +75,47 @@ class GlassBottomNavBar extends StatelessWidget {
   }
 
   Widget _buildHomeNavItem(BuildContext context) {
-    final isSelected = selectedIndex == 1;
+    // Distance from target page (1.0 for home)
+    final double distance = (scrollPosition - 1.0).abs().clamp(0.0, 1.0);
+    
+    // Interpolate values
+    final double scale = 1.0 - (0.5 * distance); // 1.0 to 0.5
+    final double alpha = 1.0 - (0.4 * distance); // 1.0 to 0.6
+    final Color color = Color.lerp(Colors.white, const Color(0xFFD0E0FF), distance)!;
+
     return InkWell(
       onTap: () => onTabSelected(1),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              // THE DITTO HOME ICON (166x84 in native XML, scale down if not selected)
-              Image.asset(
+          Transform.scale(
+            scale: scale,
+            child: Opacity(
+              opacity: alpha,
+              child: Image.asset(
                 'assets/icons/ic_home.png',
-                width: isSelected ? 166 : 70, // scaling down unselected
-                height: isSelected ? 84 : 35, // scaling down unselected
+                width: 166,
+                height: 84,
                 fit: BoxFit.contain,
-                color: isSelected ? null : Colors.white70, // Gray out unselected
               ),
-            ],
+            ),
           ),
-          SizedBox(height: isSelected ? 3 : 8),
-          Text(
-            'Home',
-            style: TextStyle(
-              color: isSelected ? Colors.white : const Color(0xFFD0E0FF),
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              shadows: isSelected 
-                ? [const Shadow(color: Color(0xFF3A6AFF), offset: Offset(0, 2), blurRadius: 6)]
-                : [const Shadow(color: Color(0xFF000C40), offset: Offset(0, 2), blurRadius: 4)],
+          Transform.translate(
+            offset: Offset(0, -(1.0 - scale) * 42), // iconHeightPx / 2
+            child: Text(
+              'Home',
+              style: TextStyle(
+                color: color.withOpacity(alpha),
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                shadows: [
+                  Shadow(
+                    color: Color.lerp(const Color(0xFF3A6AFF), const Color(0xFF000C40), distance)!, 
+                    offset: const Offset(0, 2), 
+                    blurRadius: 4.0 + (2.0 * (1.0 - distance))
+                  )
+                ],
+              ),
             ),
           ),
         ],
@@ -112,40 +124,47 @@ class GlassBottomNavBar extends StatelessWidget {
   }
 
   Widget _buildNavItem(BuildContext context, int index, String label, String assetPath, double iconW, double iconH, {required Color shadowColor}) {
-    final isSelected = selectedIndex == index;
-    final textColor = isSelected ? Colors.white : const Color(0xFFD0E0FF);
+    // Distance from target page (0.0 or 2.0)
+    final double distance = (scrollPosition - index.toDouble()).abs().clamp(0.0, 1.0);
+    
+    // Interpolate values
+    final double scale = 1.0 - (0.5 * distance); // 1.0 to 0.5
+    final double alpha = 1.0 - (0.4 * distance); // 1.0 to 0.6
+    final Color color = Color.lerp(Colors.white, const Color(0xFFD0E0FF), distance)!;
 
     return InkWell(
       onTap: () => onTabSelected(index),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              Image.asset(
+          Transform.scale(
+            scale: scale,
+            child: Opacity(
+              opacity: alpha,
+              child: Image.asset(
                 assetPath, 
-                width: isSelected ? iconW * 2.1 : iconW, // Scaled massively to match Home size visually
-                height: isSelected ? iconH * 2.1 : iconH, 
+                width: iconW * 2.1, 
+                height: iconH * 2.1, 
                 fit: BoxFit.contain,
-                color: isSelected ? null : Colors.white70,
               ),
-            ],
+            ),
           ),
-          SizedBox(height: isSelected ? 4 : 8),
-          Text(
-            label,
-            style: TextStyle(
-              color: textColor,
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              shadows: [
-                Shadow(
-                  color: isSelected ? const Color(0xFF3A6AFF) : shadowColor, 
-                  offset: const Offset(0, 2), 
-                  blurRadius: isSelected ? 6 : 4
-                ),
-              ],
+          Transform.translate(
+            offset: Offset(0, -(1.0 - scale) * (iconH * 2.1 / 2)),
+            child: Text(
+              label,
+              style: TextStyle(
+                color: color.withOpacity(alpha),
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                shadows: [
+                  Shadow(
+                    color: Color.lerp(const Color(0xFF3A6AFF), shadowColor, distance)!, 
+                    offset: const Offset(0, 2), 
+                    blurRadius: 4.0 + (2.0 * (1.0 - distance))
+                  ),
+                ],
+              ),
             ),
           ),
         ],

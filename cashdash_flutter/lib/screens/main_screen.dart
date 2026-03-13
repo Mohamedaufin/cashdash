@@ -142,6 +142,42 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
+  double _scrollPosition = 1.0; // Current page offset
+  bool _isNavigating = false;
+  bool _skippingHome = false;
+
+  void _navigateTo(int index) {
+    final current = _selectedIndex;
+    if (current == index || _isNavigating) return;
+
+    if ((current - index).abs() > 1) {
+      // Non-adjacent jump (Allocator <-> History)
+      setState(() {
+        _isNavigating = true;
+        _skippingHome = true;
+      });
+      _pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.decelerate,
+      ).then((_) {
+        if (mounted) {
+          setState(() {
+            _isNavigating = false;
+            _skippingHome = false;
+          });
+        }
+      });
+    } else {
+      // Adjacent jump
+      _pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -155,18 +191,33 @@ class _MainScreenState extends State<MainScreen> {
         ),
         child: Stack(
           children: [
-            // Using IndexedStack for seamless tab switching with icon highlighting
-            PageView(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(), // Match native where you click tabs
-              onPageChanged: (index) {
-                setState(() => _selectedIndex = index);
+            NotificationListener<ScrollNotification>(
+              onNotification: (notification) {
+                if (notification is ScrollUpdateNotification && !_isNavigating) {
+                  setState(() {
+                    _scrollPosition = _pageController.page ?? _selectedIndex.toDouble();
+                  });
+                }
+                return false;
               },
-              children: [
-                const AllocatorScreen(),
-                HomeContent(scaffoldKey: _scaffoldKey),
-                const HistoryScreen(),
-              ],
+              child: PageView(
+                controller: _pageController,
+                physics: const BouncingScrollPhysics(), // Native-like bounce
+                onPageChanged: (index) {
+                  setState(() {
+                    _selectedIndex = index;
+                    _scrollPosition = index.toDouble();
+                  });
+                },
+                children: [
+                  const AllocatorScreen(),
+                  Opacity(
+                    opacity: _skippingHome ? 0.0 : 1.0, // Match native skip behavior
+                    child: HomeContent(scaffoldKey: _scaffoldKey),
+                  ),
+                  const HistoryScreen(),
+                ],
+              ),
             ),
             Positioned(
               left: 0,
@@ -174,13 +225,8 @@ class _MainScreenState extends State<MainScreen> {
               bottom: 0,
               child: GlassBottomNavBar(
                 selectedIndex: _selectedIndex,
-                onTabSelected: (index) {
-                  _pageController.animateToPage(
-                    index,
-                    duration: const Duration(milliseconds: 250),
-                    curve: Curves.easeInOut,
-                  );
-                },
+                scrollPosition: _scrollPosition,
+                onTabSelected: _navigateTo,
               ),
             ),
           ],

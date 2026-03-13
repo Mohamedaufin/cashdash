@@ -62,5 +62,12 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- For UPI Payment App detection (Android 11+) -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="upi" />
+        </intent>
+        <!-- Explicit CRED package query -->
+        <package android:name="com.dreamplug.androidapp" />
     </queries>
 </manifest>

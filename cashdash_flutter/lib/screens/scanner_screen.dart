@@ -4,6 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:image_picker/image_picker.dart';
+import '../components/glass_input.dart';
+import '../components/glass_button.dart';
+import '../components/transaction_dialog.dart';
 import '../services/storage_service.dart';
 import '../services/transaction_service.dart';
 import '../services/category_icon_helper.dart';
@@ -172,6 +175,10 @@ class _ScannerScreenState extends State<ScannerScreen> {
     _showPaymentBottomSheet(last);
   }
 
+  static const _paymentChannel = MethodChannel('com.aufin.cashdash/payment_channel');
+
+  // ... existing code ...
+
   // ── Payment bottom sheet (mirrors layout_payment_bottom_sheet.xml) ─────────
   void _showPaymentBottomSheet(String upiUri) {
     StorageService.setString('last_upi', upiUri);
@@ -225,8 +232,12 @@ class _ScannerScreenState extends State<ScannerScreen> {
                   const SizedBox(height: 25),
   
                   // Amount input
-                  _glassInputField(amountController, '0',
-                      keyboard: TextInputType.number, onChanged: (_) => setSheet(() {})),
+                  GlassInput(
+                    controller: amountController,
+                    hintText: '0',
+                    keyboardType: TextInputType.number,
+                    onChanged: (_) => setSheet(() {}),
+                  ),
                   const SizedBox(height: 25),
   
                   // Allocation section
@@ -254,33 +265,37 @@ class _ScannerScreenState extends State<ScannerScreen> {
                   ),
                   const SizedBox(height: 25),
   
-                  // CRED button
+                  // Toggle between Pay (Selection Step) and CRED (Payment Step)
                   if (paymentContainerVisible) ...[
-                    _glass3dButton(
-                      'CRED',
+                    GlassButton(
+                      label: 'CRED',
+                      height: 70,
                       onTap: () {
                         _pendingAmount = int.tryParse(amountController.text) ?? 0;
+                        if (_pendingAmount == 0) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please enter an amount')),
+                          );
+                          return;
+                        }
                         Navigator.pop(ctx);
                         _payUpi(upiUri, amountController.text, 'com.dreamplug.androidapp');
                       },
                     ),
-                    const SizedBox(height: 12),
-                  ],
-  
-                  // Pay button
-                  _glass3dButton(
-                    amountController.text.isNotEmpty
-                        ? 'Pay ₹${amountController.text}'
-                        : 'Pay ₹0',
-                    onTap: () {
-                      final amt = amountController.text;
-                      if (amt.isEmpty || (int.tryParse(amt) ?? 0) == 0) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please enter an amount')),
-                        );
-                        return;
-                      }
-                      if (_pendingCategory == null) {
+                  ] else ...[
+                    // Selection Step: Dynamically show the amount
+                    GlassButton(
+                      label: amountController.text.isNotEmpty && (int.tryParse(amountController.text) ?? 0) > 0
+                          ? 'Pay ₹${amountController.text}'
+                          : 'Enter Amount to Pay',
+                      height: 70,
+                      onTap: () {
+                        if (amountController.text.isEmpty || (int.tryParse(amountController.text) ?? 0) == 0) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please enter an amount')),
+                          );
+                          return;
+                        }
                         _showAllocationChooser(
                           onSelected: (cat, label) {
                             setSheet(() {
@@ -291,13 +306,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
                             });
                           },
                         );
-                      } else {
-                         _pendingAmount = int.tryParse(amountController.text) ?? 0;
-                         Navigator.pop(ctx);
-                         _payUpi(upiUri, amountController.text, '');
-                      }
-                    },
-                  ),
+                      },
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -316,59 +327,6 @@ class _ScannerScreenState extends State<ScannerScreen> {
   }
 
   // ── Payment bottom sheet helpers ──────────────────────────────────────────
-
-  Widget _glassInputField(TextEditingController ctrl, String hint,
-      {TextInputType keyboard = TextInputType.text,
-      ValueChanged<String>? onChanged}) {
-    return Container(
-      height: 75,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: Colors.black.withOpacity(0.3),
-        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.2),
-      ),
-      child: TextField(
-        controller: ctrl,
-        keyboardType: keyboard,
-        onChanged: onChanged,
-        style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: const TextStyle(color: Colors.white24),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 25, vertical: 22),
-          border: InputBorder.none,
-        ),
-      ),
-    );
-  }
-
-  Widget _glass3dButton(String label, {required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        height: 70,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          gradient: const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF1E3A70), Color(0xFF0A1640)],
-          ),
-          border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.2),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 10, offset: const Offset(0, 4)),
-            BoxShadow(color: const Color(0xFF3A6AFF).withOpacity(0.15), blurRadius: 15),
-          ],
-        ),
-        child: Center(
-          child: Text(label,
-              style: const TextStyle(
-                  color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-        ),
-      ),
-    );
-  }
 
   Widget _glass3dSmallButton(String label, VoidCallback onTap) {
     return GestureDetector(
@@ -600,65 +558,70 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF1A2035),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('New Allocation',
-            style: TextStyle(color: Colors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameCtrl,
-              autofocus: true,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
+      builder: (ctx) => TransactionDialog(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'New Allocation',
+                style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 24),
+              GlassInput(
+                controller: nameCtrl,
                 hintText: 'Category Name (e.g. Travel)',
-                hintStyle: TextStyle(color: Colors.white38),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: limitCtrl,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
+              const SizedBox(height: 16),
+              GlassInput(
+                controller: limitCtrl,
                 hintText: 'Monthly Limit (Optional)',
-                hintStyle: TextStyle(color: Colors.white38),
+                keyboardType: TextInputType.number,
               ),
-            ),
-          ],
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: GlassButton(
+                      label: 'Cancel',
+                      isSecondary: true,
+                      onTap: () => Navigator.pop(ctx),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: GlassButton(
+                      label: 'Create',
+                      isSecondary: true,
+                      onTap: () {
+                        final name = nameCtrl.text.trim().replaceAll('|', '-');
+                        if (name.isEmpty || name.toLowerCase() == 'overall') {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(name.toLowerCase() == 'overall'
+                                ? "Cannot use reserved name 'Overall'"
+                                : 'Enter a valid name'),
+                          ));
+                          return;
+                        }
+                        final limit = int.tryParse(limitCtrl.text.trim()) ?? 0;
+                        final cats = StorageService.categories;
+                        if (!cats.contains(name)) {
+                          cats.add(name);
+                          StorageService.categories = cats;
+                          if (limit > 0) StorageService.setCategoryLimit(name, limit);
+                        }
+                        Navigator.pop(ctx);
+                        onSelected(name, 'Allocated to: $name');
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              final name = nameCtrl.text.trim().replaceAll('|', '-');
-              if (name.isEmpty || name.toLowerCase() == 'overall') {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text(name.toLowerCase() == 'overall'
-                      ? "Cannot use reserved name 'Overall'"
-                      : 'Enter a valid name'),
-                ));
-                return;
-              }
-              final limit = int.tryParse(limitCtrl.text.trim()) ?? 0;
-              final cats = StorageService.categories;
-              if (!cats.contains(name)) {
-                cats.add(name);
-                StorageService.categories = cats;
-                if (limit > 0) StorageService.setCategoryLimit(name, limit);
-              }
-              Navigator.pop(context);
-              onSelected(name, 'Allocated to: $name');
-            },
-            child: const Text('Create',
-                style: TextStyle(color: Color(0xFF8BF7E6))),
-          ),
-        ],
       ),
     );
   }
@@ -687,34 +650,47 @@ class _ScannerScreenState extends State<ScannerScreen> {
       p2pUriString += '&pn=$pnMatch';
     }
 
-    final uri = Uri.parse(p2pUriString);
-
     try {
-      // In Flutter, launchUrl(mode: externalApplication) is equivalent to startActivity(Intent.ACTION_VIEW)
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-        
-        // After launching, record the expense (mirrors redirectSuccess)
-        await TransactionService.saveExpense(
-          category: _pendingCategory ?? 'no choice',
-          amount: _pendingAmount > 0 ? _pendingAmount : (int.tryParse(amount) ?? 0),
-          merchant: 'To: ${_uriDecode(pnMatch) ?? 'Unknown'}',
-        );
-        
-        if (mounted) Navigator.pop(context);
+      if (pkg.isNotEmpty) {
+        // Use MethodChannel for specific app launch (Android)
+        final bool success = await _paymentChannel.invokeMethod('openUpiApp', {
+          'uri': p2pUriString,
+          'package': pkg,
+        });
+
+        if (success) {
+           await _recordTransaction(amount, pnMatch);
+        } else {
+           throw Exception("Could not launch $pkg");
+        }
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('App not installed on this device')),
-          );
+        // Fallback or generic chooser
+        final uri = Uri.parse(p2pUriString);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          await _recordTransaction(amount, pnMatch);
+        } else {
+          throw Exception("No UPI app installed");
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Failed to launch payment app')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().contains('app not installed') || e.toString().contains('LAUNCH_FAILED')
+              ? 'App not installed on this device'
+              : 'Failed to launch payment app')),
+        );
       }
     }
+  }
+
+  Future<void> _recordTransaction(String amount, String? pnMatch) async {
+    await TransactionService.saveExpense(
+      category: _pendingCategory ?? 'no choice',
+      amount: _pendingAmount > 0 ? _pendingAmount : (int.tryParse(amount) ?? 0),
+      merchant: 'To: ${_uriDecode(pnMatch) ?? 'Unknown'}',
+    );
+    if (mounted) Navigator.pop(context);
   }
 
   // ── Util ──────────────────────────────────────────────────────────────────

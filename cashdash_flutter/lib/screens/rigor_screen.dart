@@ -4,6 +4,9 @@ import '../services/storage_service.dart';
 import '../services/category_icon_helper.dart';
 import '../services/transaction_service.dart';
 import '../services/firebase_service.dart';
+import '../components/transaction_dialog.dart';
+import '../components/glass_input.dart';
+import '../components/glass_button.dart';
 
 /// Mirrors activity_rigor.xml + RigorActivity.kt.
 /// Page 1: Title input + Amount input + CalendarView → Next
@@ -28,62 +31,7 @@ class _RigorScreenState extends State<RigorScreen> {
     super.dispose();
   }
 
-  // ── Shared glass input field matching bg_glass_input ─────────────────────
-  Widget _glassInput(TextEditingController ctrl, String hint,
-      {TextInputType keyboard = TextInputType.text}) {
-    return Container(
-      height: 60,
-      margin: const EdgeInsets.only(top: 20),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: const Color(0x1A4AA3FF),
-        border: Border.all(color: const Color(0x334AA3FF), width: 1),
-      ),
-      child: TextField(
-        controller: ctrl,
-        keyboardType: keyboard,
-        style: const TextStyle(color: Colors.white, fontSize: 16),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: const TextStyle(color: Color(0xFFA8B5D1)),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
-          border: InputBorder.none,
-        ),
-      ),
-    );
-  }
-
-  // ── Glass 3D button matching bg_glass_3d drawable ────────────────────────
-  Widget _glass3dButton(String label, VoidCallback onTap) {
-    return Container(
-      width: double.infinity,
-      height: 60,
-      margin: const EdgeInsets.only(top: 15),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF1E3A70), Color(0xFF0A1640)],
-            ),
-            border: Border.all(color: const Color(0x444AA3FF), width: 1.2),
-            boxShadow: const [
-              BoxShadow(color: Color(0x44000000), blurRadius: 8, offset: Offset(0, 4)),
-              BoxShadow(color: Color(0x224AA3FF), blurRadius: 12),
-            ],
-          ),
-          child: Center(
-            child: Text(label,
-                style: const TextStyle(
-                    color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-          ),
-        ),
-      ),
-    );
-  }
+  // REMOVED: Local glass helpers (now using global components)
 
   @override
   Widget build(BuildContext context) {
@@ -158,11 +106,20 @@ class _RigorScreenState extends State<RigorScreen> {
           const SizedBox(height: 10),
 
           // Title input
-          _glassInput(_titleController, 'Title of Expense (e.g. Lunch)'),
-
+          Padding(
+            padding: const EdgeInsets.only(top: 20),
+            child: GlassInput(controller: _titleController, hintText: 'Title of Expense (e.g. Lunch)'),
+          ),
+          
           // Amount input
-          _glassInput(_amountController, 'Enter amount (₹)',
-              keyboard: TextInputType.number),
+          Padding(
+            padding: const EdgeInsets.only(top: 20),
+            child: GlassInput(
+              controller: _amountController,
+              hintText: 'Enter amount (₹)',
+              keyboardType: TextInputType.number,
+            ),
+          ),
 
           // Date label
           const Padding(
@@ -198,7 +155,7 @@ class _RigorScreenState extends State<RigorScreen> {
 
           const SizedBox(height: 25),
           // Next button
-          _glass3dButton('Next', _goToPage2),
+          GlassButton(label: 'Next', onTap: _goToPage2),
         ],
       ),
     );
@@ -233,7 +190,10 @@ class _RigorScreenState extends State<RigorScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             children: [
               // 🔥 Create New Allocation Button (Parity with RigorActivity.kt)
-              _glass3dButton('+ Create New Allocation', _showCreateCategoryDialog),
+              Padding(
+                padding: const EdgeInsets.only(top: 15),
+                child: GlassButton(label: '+ Create New Allocation', onTap: _showCreateCategoryDialog),
+              ),
               const SizedBox(height: 15),
               ...categories.map((cat) => _buildCategoryTile(cat)),
             ],
@@ -242,7 +202,7 @@ class _RigorScreenState extends State<RigorScreen> {
         // Back button
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-          child: _glass3dButton('Back', () => setState(() => _currentPage = 1)),
+          child: GlassButton(label: 'Back', onTap: () => setState(() => _currentPage = 1)),
         ),
       ],
     );
@@ -321,82 +281,87 @@ class _RigorScreenState extends State<RigorScreen> {
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0F1A3A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('New Allocation', style: TextStyle(color: Colors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameCtrl,
-              autofocus: true,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
+      builder: (ctx) => TransactionDialog(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'New Allocation',
+                style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 24),
+              GlassInput(
+                controller: nameCtrl,
                 hintText: 'Category Name (e.g. Travel)',
-                hintStyle: TextStyle(color: Colors.white38),
-                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
               ),
-            ),
-            const SizedBox(height: 15),
-            TextField(
-              controller: limitCtrl,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
+              const SizedBox(height: 16),
+              GlassInput(
+                controller: limitCtrl,
                 hintText: 'Monthly Limit (Optional)',
-                hintStyle: TextStyle(color: Colors.white38),
-                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                keyboardType: TextInputType.number,
               ),
-            ),
-          ],
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: GlassButton(
+                      label: 'Cancel',
+                      isSecondary: true,
+                      onTap: () => Navigator.pop(ctx),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: GlassButton(
+                      label: 'Create',
+                      isSecondary: true,
+                      onTap: () {
+                        final name = nameCtrl.text.trim().replaceAll('|', '-');
+                        if (name.isEmpty || name.toLowerCase() == 'overall') {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(name.toLowerCase() == 'overall' ? "'Overall' is reserved" : "Enter a name"))
+                          );
+                          return;
+                        }
+
+                        final limit = int.tryParse(limitCtrl.text.trim()) ?? 0;
+                        final totalBalance = StorageService.initialBalance;
+                        
+                        // Validation: Check if new limit exceeds total balance
+                        int currentSumOfLimits = 0;
+                        for (var cat in StorageService.categories) {
+                          currentSumOfLimits += StorageService.getCategoryLimit(cat);
+                        }
+
+                        if (limit > (totalBalance - currentSumOfLimits)) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Exceeds total balance! Max allowed: ₹${totalBalance - currentSumOfLimits}"))
+                          );
+                          return;
+                        }
+
+                        // Save
+                        final cats = StorageService.categories;
+                        if (!cats.contains(name)) {
+                          cats.add(name);
+                          StorageService.categories = cats;
+                          if (limit > 0) StorageService.setCategoryLimit(name, limit);
+                          
+                          FirebaseService.pushAllDataToCloud();
+                          setState(() {}); // Refresh list
+                          Navigator.pop(ctx);
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white60)),
-          ),
-          TextButton(
-            onPressed: () {
-              final name = nameCtrl.text.trim().replaceAll('|', '-');
-              if (name.isEmpty || name.toLowerCase() == 'overall') {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(name.toLowerCase() == 'overall' ? "'Overall' is reserved" : "Enter a name"))
-                );
-                return;
-              }
-
-              final limit = int.tryParse(limitCtrl.text.trim()) ?? 0;
-              final totalBalance = StorageService.initialBalance;
-              
-              // Validation: Check if new limit exceeds total balance
-              int currentSumOfLimits = 0;
-              for (var cat in StorageService.categories) {
-                currentSumOfLimits += StorageService.getCategoryLimit(cat);
-              }
-
-              if (limit > (totalBalance - currentSumOfLimits)) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Exceeds total balance! Max allowed: ₹${totalBalance - currentSumOfLimits}"))
-                );
-                return;
-              }
-
-              // Save
-              final cats = StorageService.categories;
-              if (!cats.contains(name)) {
-                cats.add(name);
-                StorageService.categories = cats;
-                if (limit > 0) StorageService.setCategoryLimit(name, limit);
-                
-                FirebaseService.pushAllDataToCloud();
-                setState(() {}); // Refresh list
-                Navigator.pop(ctx);
-              }
-            },
-            child: const Text('Create', style: TextStyle(color: Color(0xFF8BF7E6), fontWeight: FontWeight.bold)),
-          ),
-        ],
       ),
     );
   }
