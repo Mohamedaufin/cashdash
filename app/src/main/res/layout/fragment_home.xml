@@ -27,7 +27,7 @@
         android:layout_height="wrap_content"
         android:text="Hello,"
         android:textColor="@android:color/white"
-        android:textSize="26sp"
+        android:textSize="22sp"
         android:textStyle="bold"
         android:layout_marginStart="14dp"
         android:transitionName="greeting_text_transition"
