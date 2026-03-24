@@ -257,7 +257,7 @@ class MainActivity : AppCompatActivity() {
         icon.scaleY = scale
         icon.alpha = alpha
 
-        val translationY = -(1.0f - scale) * (iconHeightPx / 4f) - (6 * density)
+        val translationY = -(1.0f - scale) * (iconHeightPx / 2f)
         text.translationY = translationY
 
         text.setTextColor(color)
