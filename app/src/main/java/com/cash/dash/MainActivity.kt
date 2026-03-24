@@ -117,12 +117,8 @@ class MainActivity : AppCompatActivity() {
         val current = viewPager.currentItem
         if (current == index || isNavigating) return
 
-        if (Math.abs(current - index) > 1) {
-            // Direct slide from Allocator to History (or vice-versa) skipping Home
-            performNonAdjacentSlide(current, index)
-        } else {
-            viewPager.setCurrentItem(index, true)
-        }
+        // Always use performNonAdjacentSlide for consistent duration and custom skip logic
+        performNonAdjacentSlide(current, index)
     }
 
     private fun performNonAdjacentSlide(from: Int, to: Int) {
@@ -132,8 +128,9 @@ class MainActivity : AppCompatActivity() {
         viewPager.isUserInputEnabled = false
 
         val width = viewPager.width.toFloat()
+        val distance = Math.abs(navTo - navFrom).toFloat()
         val animator = android.animation.ValueAnimator.ofFloat(0f, 1f)
-        animator.duration = 300
+        animator.duration = 400
         animator.interpolator = android.view.animation.DecelerateInterpolator()
 
         var lastValue = 0f
@@ -148,7 +145,7 @@ class MainActivity : AppCompatActivity() {
 
             // Sync page drag
             if (viewPager.isFakeDragging || viewPager.beginFakeDrag()) {
-                val dragDelta = if (to > from) -deltaProgress * width * 2 else deltaProgress * width * 2
+                val dragDelta = if (to > from) -deltaProgress * width * distance else deltaProgress * width * distance
                 viewPager.fakeDragBy(dragDelta)
             }
         }
