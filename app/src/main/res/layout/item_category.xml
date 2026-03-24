@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="110dp"
+    android:paddingStart="28dp"
+    android:paddingEnd="28dp"
+    android:gravity="center_vertical"
+    android:background="@drawable/bg_card_dark"
+    android:orientation="horizontal"
+    android:layout_marginBottom="18dp"
+    android:elevation="12dp">
+
+    <LinearLayout
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:background="@drawable/bg_icon_dark"
+        android:gravity="center"
+        android:layout_marginEnd="26dp">
+
+        <ImageView
+            android:id="@+id/iconEdit"
+            android:layout_width="46dp"
+            android:layout_height="49dp"
+            android:src="@drawable/ic_edit"
+            android:tint="@android:color/white" />
+    </LinearLayout>
+
+    <!-- TEXT AREA -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/categoryName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Category"
+            android:textColor="@android:color/white"
+            android:textSize="26sp"
+            android:textStyle="bold"/>
+
+        <!-- NEW SUBTITLE -->
+        <TextView
+            android:id="@+id/categoryLimit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Current limit = ₹0"
+            android:textColor="#B0B0B0"
+            android:textSize="11sp"
+            android:layout_marginTop="6dp"/>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnLimit"
+        android:layout_width="wrap_content"
+        android:layout_height="38dp"
+        android:background="@drawable/bg_glass_3d"
+        android:stateListAnimator="@null"
+        android:text="Set limit"
+        android:textColor="@android:color/white"
+        android:textSize="13sp"
+        android:textStyle="bold"/>
+</LinearLayout>

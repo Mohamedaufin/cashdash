@@ -1,0 +1,145 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_main_gradient"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="70dp"
+        android:paddingBottom="40dp">
+
+        <!-- TITLE 1 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Current Cycle End Date"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:layout_marginBottom="5dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Select when your current budget should expire"
+            android:textSize="14sp"
+            android:textColor="#B0C8FF"
+            android:layout_marginBottom="15dp"/>
+
+        <!-- CALENDAR VIEW WRAPPER -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_glass_panel"
+            android:padding="10dp"
+            android:layout_marginBottom="25dp">
+
+            <CalendarView
+                android:id="@+id/calendarView"
+                android:layout_width="match_parent"
+                android:layout_height="350dp" />
+        </FrameLayout>
+
+        <!-- TITLE 2 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="5dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Budget Reset Frequency"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/white"/>
+
+            <ImageButton
+                android:id="@+id/btnInfoReset"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:background="@drawable/bg_white_circle"
+                android:src="@drawable/ic_i_symbol"
+                android:tint="#0D1B6E"
+                android:padding="1dp"
+                android:scaleType="fitCenter"/>
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="How often should your wallet automatically renew?"
+            android:textSize="14sp"
+            android:textColor="#B0C8FF"
+            android:layout_marginBottom="15dp"/>
+
+        <RadioGroup
+            android:id="@+id/rgFrequency"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <RadioButton
+                android:id="@+id/rbMonthly"
+                android:text="Monthly (30 days)"
+                android:textColor="@android:color/white"/>
+
+            <RadioButton
+                android:id="@+id/rbWeekly"
+                android:text="Weekly (7 days)"
+                android:textColor="@android:color/white"/>
+
+            <RadioButton
+                android:id="@+id/rbCustom"
+                android:text="Custom (Days)"
+                android:textColor="@android:color/white"/>
+        </RadioGroup>
+
+        <TextView
+            android:id="@+id/tvCyclePreview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Your cycle renews on..."
+            android:textColor="#00E6FF"
+            android:textSize="15sp"
+            android:textStyle="italic"
+            android:visibility="gone"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="15dp"/>
+
+        <EditText
+            android:id="@+id/etCustomDays"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter numbers of days"
+            android:textColorHint="#B0B0B0"
+            android:textColor="@android:color/white"
+            android:inputType="number"
+            android:padding="15dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="25dp"
+            android:background="@drawable/bg_glass_input"
+            android:visibility="gone" />
+
+        <!-- SAVE BUTTON -->
+        <Button
+            android:id="@+id/btnSaveSchedule"
+            android:layout_width="match_parent"
+            android:layout_height="65dp"
+            android:text="Save Schedule"
+            android:textSize="22sp"
+            android:textColor="@android:color/white"
+            android:background="@drawable/bg_glass_3d"
+            app:backgroundTint="@null"
+            android:layout_marginTop="10dp"/>
+    </LinearLayout>
+
+</ScrollView>

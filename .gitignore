@@ -1,0 +1,27 @@
+*.iml
+.gradle
+/local.properties
+/.idea/
+/.kotlin/
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+*.log
+hs_err_pid*
+replay_pid*
+
+# Specific to this project - ignoring other modules/folders
+/cashdash_flutter/
+/test_build/
+/Cashdash1111/
+/functions/
+
+# Android app artifacts
+/app/build/
+/app/release/
+*.apk
+*.ap_
+*.dex
+*.class

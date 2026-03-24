@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_main_gradient">
+
+    <!-- ════════════════════ SCROLLABLE CONTENT ════════════════════ -->
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        android:paddingLeft="18dp"
+        android:paddingRight="18dp"
+        android:paddingTop="0dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottomNav"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:id="@+id/categoryContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:dividerPadding="0dp"
+            android:showDividers="none"
+            android:layout_marginTop="-20dp"
+            android:paddingBottom="150dp"
+            android:dividerHeight="28dp"/>
+    </ScrollView>
+
+    <!-- ══════════════════════ BOTTOM NAV BAR ══════════════════════ -->
+    <LinearLayout
+        android:id="@+id/bottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="135dp"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:background="@drawable/bg_3d_bottom_nav"
+        android:elevation="32dp"
+        android:translationZ="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Allocator Tab — ACTIVE (larger icon) -->
+        <LinearLayout
+            android:id="@+id/tabAllocator"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground">
+
+            <ImageView
+                android:id="@+id/iconAllocator"
+                android:layout_width="166dp"
+                android:layout_height="84dp"
+                android:src="@drawable/ic_allocator"
+                android:contentDescription="Allocator"
+                android:translationZ="6dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Allocator"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:shadowColor="#3A6AFF"
+                android:shadowDx="0"
+                android:shadowDy="2"
+                android:shadowRadius="6"/>
+        </LinearLayout>
+
+        <!-- Home Tab -->
+        <LinearLayout
+            android:id="@+id/tabHome"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground">
+
+            <ImageView
+                android:id="@+id/iconHome"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:src="@drawable/ic_home"
+                android:contentDescription="Home"
+                android:translationZ="4dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Home"
+                android:textColor="#D0E0FF"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:layout_marginTop="3dp"
+                android:shadowColor="#000C40"
+                android:shadowDx="0"
+                android:shadowDy="2"
+                android:shadowRadius="4"/>
+        </LinearLayout>
+
+        <!-- History Tab -->
+        <LinearLayout
+            android:id="@+id/tabHistory"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground">
+
+            <ImageView
+                android:id="@+id/iconHistory"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:src="@drawable/ic_history"
+                android:contentDescription="History"
+                android:translationZ="4dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="History"
+                android:textColor="#D0E0FF"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:shadowColor="#000C40"
+                android:shadowDx="0"
+                android:shadowDy="2"
+                android:shadowRadius="4"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

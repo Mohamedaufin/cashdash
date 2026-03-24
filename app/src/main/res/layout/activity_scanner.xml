@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <!-- Camera Preview -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/previewView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter" />
+
+    <!-- 🔥 Neon Scanner Frame Overlay -->
+    <View
+        android:id="@+id/neonFrame"
+        android:layout_width="280dp"
+        android:layout_height="280dp"
+        android:background="@drawable/neon_border"
+        android:layout_gravity="center"
+        android:visibility="visible"/>
+
+    <!-- Close Button -->
+    <ImageButton
+        android:id="@+id/btnCloseScanner"
+        android:layout_width="55dp"
+        android:layout_height="55dp"
+        android:layout_margin="25dp"
+        android:background="@drawable/bg_glass_3d_round"
+        android:padding="12dp"
+        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        android:scaleType="fitCenter"
+        android:tint="#FFFFFF"
+        android:layout_gravity="top|start"/>
+
+    <!-- History Button (Top-Right) -->
+    <ImageButton
+        android:id="@+id/btnHistory"
+        android:layout_width="55dp"
+        android:layout_height="55dp"
+        android:layout_margin="25dp"
+        android:background="@drawable/bg_glass_3d_round"
+        android:padding="12dp"
+        android:src="@android:drawable/ic_menu_revert"
+        android:scaleType="fitCenter"
+        android:tint="#FFFFFF"
+        android:layout_gravity="top|end"/>
+
+
+    <!-- 📁 Gallery Import Button (Bottom-Left) -->
+    <ImageButton
+        android:id="@+id/btnGallery"
+        android:layout_width="55dp"
+        android:layout_height="55dp"
+        android:layout_marginBottom="25dp"
+        android:layout_marginStart="25dp"
+        android:background="@drawable/bg_glass_3d_round"
+        android:padding="12dp"
+        android:src="@drawable/ic_gallery_modern"
+        android:scaleType="fitCenter"
+        android:layout_gravity="bottom|start"/>
+
+</FrameLayout>

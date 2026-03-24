@@ -1,0 +1,47 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.Cashdash" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+    </style>
+
+
+    <style name="keyBtn">
+        <item name="android:layout_width">0dp</item>         <!-- takes space equally -->
+        <item name="android:layout_height">0dp</item>        <!-- updated to 0dp to fix scaling -->
+        <item name="android:layout_columnWeight">1</item>    <!-- forces equal width -->
+        <item name="android:layout_margin">10dp</item>
+        <item name="backgroundTint">@null</item>
+        <item name="android:background">@drawable/bg_glass_3d_keypad</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:gravity">center</item>
+        <item name="android:layout_rowWeight">1</item>
+    </style>
+
+
+
+    <style name="Theme.Cashdash" parent="Base.Theme.Cashdash">
+    </style>
+
+
+    <!-- 3D POPUP MENU STYLES -->
+    <style name="PopupMenu3D" parent="Widget.AppCompat.PopupMenu">
+        <item name="android:popupBackground">@drawable/bg_3d_dropdown</item>
+        <item name="android:dropDownVerticalOffset">8dp</item>
+    </style>
+
+    <style name="PopupMenuTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="popupMenuStyle">@style/PopupMenu3D</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <!-- BOTTOM SHEET STYLE (Transparent background so we can use bg_main_gradient) -->
+    <style name="BottomSheetDialogTheme" parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/BottomSheetStyle</item>
+    </style>
+
+    <style name="BottomSheetStyle" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+</resources>

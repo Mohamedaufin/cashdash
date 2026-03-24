@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_main_gradient"
+    android:padding="24dp"
+    android:clipToPadding="false">
+
+    <!-- Drag Handle -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:background="#40FFFFFF"
+        android:layout_marginBottom="20dp" />
+
+    <TextView
+        android:id="@+id/tvReceiverInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Receiver: Unknown\nUPI ID: Unknown"
+        android:textSize="16sp"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="20dp" />
+
+    <EditText
+        android:id="@+id/etPaymentAmount"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:hint="Enter Amount"
+        android:textColorHint="#A0A0A0"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp"
+        android:inputType="numberDecimal"
+        android:background="@drawable/bg_glass_input"
+        android:paddingHorizontal="20dp"
+        android:layout_marginBottom="20dp" />
+
+    <!-- Allocation Section -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="20dp">
+
+        <TextView
+            android:id="@+id/tvAllocationLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="No allocation selected"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/btnChooseAllocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Change"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/bg_glass_3d"
+            android:paddingHorizontal="15dp" />
+    </LinearLayout>
+
+    <!-- Payment Buttons Container -->
+    <LinearLayout
+        android:id="@+id/paymentActionContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        android:layout_marginBottom="15dp"
+        android:weightSum="2">
+
+        <Button
+            android:id="@+id/btnPayCred"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="CRED"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:background="@drawable/bg_glass_3d"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btnPayGPay"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="GPay"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:background="@drawable/bg_glass_3d"
+            android:layout_marginStart="8dp" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvWalletBalance"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Wallet Balance: ₹0"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:layout_marginBottom="10dp" />
+
+    <Button
+        android:id="@+id/btnPayInitiate"
+        android:layout_width="match_parent"
+        android:layout_height="65dp"
+        android:text="Pay ₹0"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:background="@drawable/bg_glass_3d"
+        android:layout_marginBottom="15dp" />
+
+</LinearLayout>

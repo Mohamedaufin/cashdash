@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 1. Base Fill (Glossy Blue/Purple) -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#80A0FF"
+                android:endColor="#4060DD"
+                android:angle="135"
+                android:type="linear"/>
+            <corners android:radius="28dp"/>
+        </shape>
+    </item>
+
+    <!-- 2. Top-edge Gloss highlight -->
+    <item
+        android:bottom="10dp"
+        android:left="2dp"
+        android:right="2dp"
+        android:top="0dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#60FFFFFF"
+                android:endColor="#00FFFFFF"
+                android:angle="270"
+                android:type="linear"/>
+            <corners
+                android:topLeftRadius="28dp"
+                android:topRightRadius="28dp"
+                android:bottomLeftRadius="0dp"
+                android:bottomRightRadius="0dp"/>
+        </shape>
+    </item>
+
+</layer-list>
