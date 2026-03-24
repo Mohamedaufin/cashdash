@@ -51,6 +51,8 @@ class MainActivity : AppCompatActivity() {
     private val argbEvaluator = android.animation.ArgbEvaluator()
 
     private var isNavigating = false
+    private var navFrom = -1
+    private var navTo = -1
     private var density: Float = 0f
     private var iconHeightPx: Float = 0f
     private var lastShadowRadius = -1f
@@ -125,6 +127,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun performNonAdjacentSlide(from: Int, to: Int) {
         isNavigating = true
+        navFrom = from
+        navTo = to
         viewPager.isUserInputEnabled = false
 
         val width = viewPager.width.toFloat()
@@ -154,8 +158,13 @@ class MainActivity : AppCompatActivity() {
                 if (viewPager.isFakeDragging) viewPager.endFakeDrag()
                 viewPager.setCurrentItem(to, false)
                 viewPager.isUserInputEnabled = true
-                updateNavbarStateBetween(to, to, 0f)
+                
+                // Clear state
                 isNavigating = false
+                navFrom = -1
+                navTo = -1
+                
+                updateNavbarStateBetween(to, to, 0f)
             }
         })
 
@@ -193,15 +202,24 @@ class MainActivity : AppCompatActivity() {
         viewPager.setCurrentItem(1, false)
 
         viewPager.setPageTransformer { page, position ->
-            if (isNavigating) {
-                // Use tag to identify Home page instead of indexOfChild
-                if (page.tag == "f1") {
+            if (isNavigating && Math.abs(navFrom - navTo) > 1) {
+                val pageIndex = when {
+                    page.findViewById<View>(R.id.categoryContainer) != null -> 0
+                    page.findViewById<View>(R.id.walletContainer) != null -> 1
+                    page.findViewById<View>(R.id.dayGraph) != null -> 2
+                    else -> -1
+                }
+
+                if (pageIndex == 1) {
                     page.alpha = 0f
-                } else {
+                } else if (pageIndex == 0 || pageIndex == 2) {
                     page.alpha = 1f
+                    // Shift both pages by half the distance to make them adjacent
+                    page.translationX = -position * 0.5f * page.width
                 }
             } else {
                 page.alpha = 1f
+                page.translationX = 0f
             }
         }
 
