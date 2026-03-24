@@ -72,8 +72,9 @@ class NotificationActivity : AppCompatActivity() {
 
     private fun markAllAsRead() {
         val user = FirebaseAuth.getInstance().currentUser ?: return
+        val email = user.email ?: return
         val db = FirebaseFirestore.getInstance()
-        db.collection("users").document(user.uid).collection("notifications")
+        db.collection("users").document(email).collection("notifications")
             .whereEqualTo("read", false)
             .get()
             .addOnSuccessListener { docs ->
@@ -87,11 +88,12 @@ class NotificationActivity : AppCompatActivity() {
 
     private fun loadNotifications() {
         val user = FirebaseAuth.getInstance().currentUser ?: return
+        val email = user.email ?: return 
         val db = FirebaseFirestore.getInstance()
         val tvEmpty = findViewById<TextView>(R.id.tvEmptyNotifications)
         val rv = findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.rvNotifications)
 
-        db.collection("users").document(user.uid).collection("notifications")
+        db.collection("users").document(email).collection("notifications")
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .get()
             .addOnSuccessListener { docs ->
@@ -140,7 +142,7 @@ class NotificationActivity : AppCompatActivity() {
                     // Auto-resolve check (Trigger only after team responds if user is silent for 48h)
                     if (!isResolved && status == "responded" && (now - ts) > fortyEightHours) {
                         isResolved = true
-                        db.collection("users").document(user.uid).collection("notifications").document(doc.id).update("status", "resolved")
+                        db.collection("users").document(email).collection("notifications").document(doc.id).update("status", "resolved")
                     }
 
                     val isPending = (reply == "Waiting for reply...")
@@ -268,8 +270,8 @@ class NotificationActivity : AppCompatActivity() {
             background = androidx.core.content.ContextCompat.getDrawable(context, R.drawable.bg_glass_input)
             layoutParams = LinearLayout.LayoutParams(0, 140, 1f).apply { setMargins(15, 0, 0, 0) }
             setOnClickListener {
-                val user = FirebaseAuth.getInstance().currentUser ?: return@setOnClickListener
-                FirebaseFirestore.getInstance().collection("users").document(user.uid)
+                val email = user.email ?: return@setOnClickListener
+                FirebaseFirestore.getInstance().collection("users").document(email)
                     .collection("notifications").document(model.id).delete()
                     .addOnSuccessListener {
                         ToastHelper.showToast(this@NotificationActivity, "Query deleted")
@@ -463,7 +465,8 @@ class NotificationActivity : AppCompatActivity() {
                 "read" to true
             )
 
-            db.collection("users").document(user.uid).collection("notifications").document(model.id)
+            val email = user.email ?: return
+            db.collection("users").document(email).collection("notifications").document(model.id)
                 .update(updateData as Map<String, Any>)
                 .addOnSuccessListener {
                     triggerPipedreamForReply(user.uid, model.originalSubject, model.originalQuery, model.originalReply, timestamp, replyText, model.id)

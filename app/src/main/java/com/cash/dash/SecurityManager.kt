@@ -13,13 +13,14 @@ object SecurityManager {
 
     fun startListening(context: Context) {
         val user = FirebaseAuth.getInstance().currentUser ?: return
+        val email = user.email ?: return
         if (deletionListener != null || userDocListener != null) return
 
         val db = FirebaseFirestore.getInstance()
         val appContext = context.applicationContext
 
-        // 1. Monitor main profile status field
-        deletionListener = db.collection("users").document(user.uid)
+        // 1. Monitor main profile status field (now under email)
+        deletionListener = db.collection("users").document(email)
             .collection("config").document("profile")
             .addSnapshotListener { snapshot, e ->
                 if (e != null || isTriggering) return@addSnapshotListener
@@ -31,8 +32,8 @@ object SecurityManager {
                 }
             }
 
-        // 2. Monitor if the main user document itself is deleted
-        userDocListener = db.collection("users").document(user.uid)
+        // 2. Monitor if the main user document itself is deleted (now under email)
+        userDocListener = db.collection("users").document(email)
             .addSnapshotListener { snapshot, e ->
                 if (isTriggering) return@addSnapshotListener
                 

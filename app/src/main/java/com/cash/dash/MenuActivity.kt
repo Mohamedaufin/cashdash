@@ -74,9 +74,10 @@ class MenuActivity : AppCompatActivity() {
 
     private fun setupNotificationListener(badge: View) {
         val user = FirebaseAuth.getInstance().currentUser ?: return
+        val email = user.email ?: return
         val db = FirebaseFirestore.getInstance()
 
-        db.collection("users").document(user.uid).collection("notifications")
+        db.collection("users").document(email).collection("notifications")
             .whereEqualTo("read", false)
             .addSnapshotListener { snapshot, _ ->
                 var hasUnreadReply = false

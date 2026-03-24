@@ -22,7 +22,7 @@ object FirestoreSyncManager {
     fun pushAllDataToCloud(context: Context) {
         val appContext = context.applicationContext
         val user = FirebaseAuth.getInstance().currentUser ?: return
-        val uid = user.uid
+        val email = user.email ?: return 
 
         Thread {
             try {
@@ -48,8 +48,11 @@ object FirestoreSyncManager {
                     "account_creation_time" to userPrefs.getLong("account_creation_time", 0L),
                     "account_status" to "active"
                 )
-                db.collection("users").document(uid).collection("config").document("profile")
+                db.collection("users").document(email).collection("config").document("profile")
                     .set(userConfigData, SetOptions.merge())
+                
+                // 🔥 Keep Email in Root for Easy Console Visibility
+                db.collection("users").document(email).set(hashMapOf("email" to email), SetOptions.merge())
 
                 // 2. Wallet Data
                 val initialBalance = walletPrefs.getInt("initial_balance", 0)
@@ -68,7 +71,7 @@ object FirestoreSyncManager {
                     "frequency" to schedulePrefs.getInt("frequency", 30),
                     "cycle_initialized" to schedulePrefs.getBoolean("cycle_initialized", false)
                 )
-                db.collection("users").document(uid).collection("config").document("wallet")
+                db.collection("users").document(email).collection("config").document("wallet")
                     .set(walletData)
 
                 // 3. Category Data (Limits & Spent)
@@ -82,7 +85,7 @@ object FirestoreSyncManager {
                         "spent" to spent
                     )
                 }
-                db.collection("users").document(uid).collection("config").document("categories")
+                db.collection("users").document(email).collection("config").document("categories")
                     .set(hashMapOf(
                         "data" to catMap,
                         "allocation_categories" to categoriesSet.toList()
@@ -123,22 +126,22 @@ object FirestoreSyncManager {
                 historyPayload["raw_list"] = historySet.toList()
                 historyPayload["detailed_transactions"] = detailedTransactions
 
-                db.collection("users").document(uid).collection("config").document("history")
+                db.collection("users").document(email).collection("config").document("history")
                     .set(historyPayload)
 
                 // 5. CategoryWeekData
-                db.collection("users").document(uid).collection("config").document("analytics")
+                db.collection("users").document(email).collection("config").document("analytics")
                     .set(hashMapOf("CategoryWeekData" to categoryWeekPrefs.all))
 
                 // 6. ScannerHistory
-                db.collection("users").document(uid).collection("config").document("history_scanner")
+                db.collection("users").document(email).collection("config").document("history_scanner")
                     .set(hashMapOf("ScannerHistory" to scannerHistPrefs.all))
 
                 // 7. LocalScanPrefs
-                db.collection("users").document(uid).collection("config").document("undo_details")
+                db.collection("users").document(email).collection("config").document("undo_details")
                     .set(hashMapOf("LocalScanPrefs" to localScanPrefs.all))
 
-                Log.d(TAG, "Background sync to cloud complete for user $uid")
+                Log.d(TAG, "Background sync to cloud complete for user $email")
             } catch (e: Exception) {
                 Log.e(TAG, "Fatal error in background sync: ${e.message}")
             }
@@ -153,9 +156,9 @@ object FirestoreSyncManager {
             return
         }
 
-        val uid = user.uid
+        val email = user.email ?: run { onComplete(false, false, false, null); return }
         val db = FirebaseFirestore.getInstance()
-        val userDoc = db.collection("users").document(uid).collection("config")
+        val userDoc = db.collection("users").document(email).collection("config")
 
         // 🚀 Parallelize all 7 document fetches
         val tProfile = userDoc.document("profile").get()
@@ -402,17 +405,18 @@ object FirestoreSyncManager {
                     }
                 }
 
-                Log.d(TAG, "Parallel pull from cloud complete for user $uid")
+                Log.d(TAG, "Parallel pull from cloud complete for user $email")
                 onComplete(true, true, false, profileData)
             }
     }
 
     fun startRealTimeSync(context: Context) {
         val user = FirebaseAuth.getInstance().currentUser ?: return
+        val email = user.email ?: return 
         if (listeners.isNotEmpty()) return // Already listening
 
         val db = FirebaseFirestore.getInstance()
-        val userDoc = db.collection("users").document(user.uid).collection("config")
+        val userDoc = db.collection("users").document(email).collection("config")
         val appContext = context.applicationContext
 
         // 1. Profile Listener

@@ -317,8 +317,9 @@ class MainActivity : AppCompatActivity() {
                 val token = task.result
                 if (token != null) {
                     val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
-                    db.collection("users").document(user.uid)
-                        .set(hashMapOf("fcmToken" to token), com.google.firebase.firestore.SetOptions.merge())
+                    val email = user.email ?: return@addOnCompleteListener
+                    db.collection("users").document(email)
+                        .set(hashMapOf("fcmToken" to token, "email" to email), com.google.firebase.firestore.SetOptions.merge())
                 }
             }
         }

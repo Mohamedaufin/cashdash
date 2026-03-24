@@ -127,7 +127,8 @@ class HelpActivity : AppCompatActivity() {
             "reply" to "Waiting for reply..."
         )
         // Use the explicit timestamp as the document ID so the backend can update it on reply
-        db.collection("users").document(user.uid).collection("notifications")
+        val userEmail = user.email ?: return
+        db.collection("users").document(userEmail).collection("notifications")
             .document(timestamp.toString())
             .set(notificationData)
             .addOnSuccessListener {

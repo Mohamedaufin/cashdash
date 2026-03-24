@@ -173,20 +173,22 @@ class ProfileActivity : AppCompatActivity() {
     private fun wipeUserFirestoreData(uid: String, email: String) {
         val db = FirebaseFirestore.getInstance()
         try {
-            // Log deletion request
+            // Log deletion request (using email as doc ID for visibility)
             val logData = hashMapOf(
                 "uid" to uid,
                 "email" to email,
                 "deleted_at" to System.currentTimeMillis(),
                 "status" to "PERMANENT_WIPE_COMPLETED"
             )
-            db.collection("deleted_accounts").document(uid).set(logData)
+            db.collection("deleted_accounts").document(email).set(logData)
 
-            // Wipe sub-collections
+            // Wipe sub-collections (using email as root doc ID)
             val docs = listOf("profile", "wallet", "categories", "history", "analytics", "history_scanner", "undo_details")
             docs.forEach { docName ->
-                db.collection("users").document(uid).collection("config").document(docName).delete()
+                db.collection("users").document(email).collection("config").document(docName).delete()
             }
+            // Finally delete the root document itself
+            db.collection("users").document(email).delete()
         } catch (e: Exception) {
             e.printStackTrace()
         }

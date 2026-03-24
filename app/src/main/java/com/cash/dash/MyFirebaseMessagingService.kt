@@ -22,10 +22,11 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     }
 
     private fun saveGlobalToken(token: String) {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val user = FirebaseAuth.getInstance().currentUser ?: return
+        val email = user.email ?: return 
         val db = FirebaseFirestore.getInstance()
-        val data = hashMapOf("fcmToken" to token)
-        db.collection("users").document(uid)
+        val data = hashMapOf("fcmToken" to token, "email" to email)
+        db.collection("users").document(email)
             .set(data, com.google.firebase.firestore.SetOptions.merge())
     }
 
