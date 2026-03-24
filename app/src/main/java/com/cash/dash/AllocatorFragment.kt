@@ -82,8 +82,10 @@ class AllocatorFragment : Fragment() {
         params.setMargins(22, 28, 22, 40)
         addView.layoutParams = params
 
-        addView.findViewById<TextView>(R.id.categoryName).text = "Add new"
-        addView.findViewById<ImageView>(R.id.iconEdit).setImageResource(R.drawable.ic_plus)
+        val addNameText = addView.findViewById<TextView>(R.id.categoryName)
+        val addIcon = addView.findViewById<ImageView>(R.id.iconEdit)
+        addNameText.text = "Add new"
+        addIcon.setImageResource(R.drawable.ic_plus)
         addView.findViewById<TextView>(R.id.categoryLimit).visibility = View.GONE
         addView.findViewById<Button>(R.id.btnLimit).visibility = View.GONE
 
@@ -374,12 +376,15 @@ class AllocatorFragment : Fragment() {
                 if (e1 != null) {
                     val deltaX = e1.x - e2.x
                     val deltaY = e1.y - e2.y
-                    // More sensitive threshold (50px distance, 30px/s velocity)
-                    if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 50 && Math.abs(vx) > 30) {
-                        view.animate().translationX(-view.width.toFloat()).alpha(0f).setDuration(250)
-                            .withEndAction {
-                                showDeleteConfirmDialog(view, name)
-                            }.start()
+                    // More sensitive threshold (30px distance, 20px/s velocity)
+                    if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 30 && Math.abs(vx) > 20) {
+                        // "Add New" shouldn't actually be deletable
+                        if (name != "ADD_NEW_PLACEHOLDER_NO_DELETE") {
+                            view.animate().translationX(-view.width.toFloat()).alpha(0f).setDuration(250)
+                                .withEndAction {
+                                    showDeleteConfirmDialog(view, name)
+                                }.start()
+                        }
                         return true
                     }
                 }
@@ -390,8 +395,8 @@ class AllocatorFragment : Fragment() {
         var startX = 0f
         var startY = 0f
         var isSwiping = false
-
-        view.setOnTouchListener { v, event ->
+        
+        val commonTouchListener = View.OnTouchListener { v, event ->
             val vp = activity?.findViewById<androidx.viewpager2.widget.ViewPager2>(R.id.viewPager)
             
             when (event.action) {
@@ -404,11 +409,10 @@ class AllocatorFragment : Fragment() {
                     val dX = Math.abs(event.x - startX)
                     val dY = Math.abs(event.y - startY)
                     
-                    // If we detect primarily horizontal movement, hijack the touch stream
                     if (dX > 10 && dX > dY) {
                         isSwiping = true
-                        v.parent?.requestDisallowInterceptTouchEvent(true) // Stop parents (ScrollView/CategoryContainer)
-                        vp?.isUserInputEnabled = false // Stop ViewPager2 switching
+                        view.parent?.requestDisallowInterceptTouchEvent(true) 
+                        vp?.isUserInputEnabled = false 
                     }
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
@@ -417,8 +421,21 @@ class AllocatorFragment : Fragment() {
             }
             
             val handled = swipeDetector.onTouchEvent(event)
-            // If we are swiping, consume the touch to prevent clicks or parent interference
             handled || isSwiping
+        }
+
+        view.setOnTouchListener(commonTouchListener)
+        
+        // Apply to interactive children to prevent them from blocking swipes, 
+        // using the extracted listener to avoid recursion.
+        view.findViewById<View>(R.id.btnLimit)?.setOnTouchListener { _, event ->
+            commonTouchListener.onTouch(view, event)
+        }
+        view.findViewById<View>(R.id.iconEdit)?.setOnTouchListener { _, event ->
+            commonTouchListener.onTouch(view, event)
+        }
+        view.findViewById<View>(R.id.categoryIcon)?.setOnTouchListener { _, event ->
+            commonTouchListener.onTouch(view, event)
         }
     }
 

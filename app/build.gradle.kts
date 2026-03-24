@@ -20,7 +20,7 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("C:/Users/moham/AndroidStudioProjects/cashdash/keydash.jks")
+            storeFile = file("../keydash.jks")
             storePassword = "123456"
             keyAlias = "cashdash_key"
             keyPassword = "123456"
