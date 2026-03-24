@@ -130,7 +130,7 @@ class MainActivity : AppCompatActivity() {
         val width = viewPager.width.toFloat()
         val distance = Math.abs(navTo - navFrom).toFloat()
         val animator = android.animation.ValueAnimator.ofFloat(0f, 1f)
-        animator.duration = 400
+        animator.duration = 180
         animator.interpolator = android.view.animation.DecelerateInterpolator()
 
         var lastValue = 0f
@@ -257,7 +257,7 @@ class MainActivity : AppCompatActivity() {
         icon.scaleY = scale
         icon.alpha = alpha
 
-        val translationY = -(1.0f - scale) * (iconHeightPx / 2f)
+        val translationY = -(1.0f - scale) * (iconHeightPx / 4f) - (6 * density)
         text.translationY = translationY
 
         text.setTextColor(color)
