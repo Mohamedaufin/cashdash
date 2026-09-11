@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Spend so far, within the limit.
+
+     ?attr/primaryActionBackground — off-white on the dark themes, near-black on White. The
+     same token the primary button and the wallet ring use, because this app says "this is the
+     live value" in off-white everywhere else. The purple gloss gradient this replaced was the
+     only colour on the screen and it was carrying no meaning: the figures above it already
+     state the amount. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/primaryActionBackground" />
+    <corners android:radius="2dp" />
+</shape>

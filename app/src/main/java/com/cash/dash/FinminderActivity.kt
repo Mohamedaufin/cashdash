@@ -50,39 +50,22 @@ class FinminderActivity : ThemedActivity() {
 
         val tvInstruction = findViewById<TextView>(R.id.tvInstruction)
 
-        val btnCashOuts = findViewById<com.google.android.material.button.MaterialButton>(R.id.btnCashOuts)
-        val btnCashIns = findViewById<com.google.android.material.button.MaterialButton>(R.id.btnCashIns)
-
-        fun updateToggleStyles(checkedId: Int) {
-            val isWhite = ThemeHelper.isWhiteTheme(this@FinminderActivity)
-            val activeColor = if (isWhite) android.graphics.Color.parseColor("#1A1A1A") else android.graphics.Color.WHITE
-            val activeTextColor = if (isWhite) android.graphics.Color.WHITE else android.graphics.Color.BLACK
-            val inactiveTextColor = ThemeHelper.resolveColorAttr(this@FinminderActivity, android.R.attr.textColorPrimary)
-
-            val activeBgColor = android.content.res.ColorStateList.valueOf(activeColor)
-            val inactiveBgColor = android.content.res.ColorStateList.valueOf(android.graphics.Color.TRANSPARENT)
-
-            if (checkedId == R.id.btnCashOuts) {
-                btnCashOuts.backgroundTintList = activeBgColor
-                btnCashOuts.setTextColor(activeTextColor)
-                btnCashIns.backgroundTintList = inactiveBgColor
-                btnCashIns.setTextColor(inactiveTextColor)
-            } else {
-                btnCashIns.backgroundTintList = activeBgColor
-                btnCashIns.setTextColor(activeTextColor)
-                btnCashOuts.backgroundTintList = inactiveBgColor
-                btnCashOuts.setTextColor(inactiveTextColor)
-            }
-        }
+        // Applied once, not per selection change.
+        //
+        // This used to assign a flat ColorStateList.valueOf() to whichever button was
+        // checked, which does not remove Material's own checked tint — it only paints over
+        // it. The default is drawn from colorPrimary, so the selected tab came out lavender
+        // and every tap threw a violet ripple, the one place in the app that hue appeared
+        // without meaning anything. A state list that answers for state_checked replaces the
+        // default outright and then tracks selection on its own.
+        ToggleTabStyler.apply(this, R.id.btnCashOuts, R.id.btnCashIns)
 
         // Initialize default tab selection visually
         toggleMode.check(if (currentTab == "CASH_OUT") R.id.btnCashOuts else R.id.btnCashIns)
-        updateToggleStyles(if (currentTab == "CASH_OUT") R.id.btnCashOuts else R.id.btnCashIns)
 
         viewPager.registerOnPageChangeCallback(object : androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 currentTab = if (position == 0) "CASH_OUT" else "CASH_IN"
-                updateToggleStyles(if (position == 0) R.id.btnCashOuts else R.id.btnCashIns)
                 val expectedCheckedId = if (position == 0) R.id.btnCashOuts else R.id.btnCashIns
                 if (toggleMode.checkedButtonId != expectedCheckedId) {
                     toggleMode.check(expectedCheckedId)
@@ -100,7 +83,6 @@ class FinminderActivity : ThemedActivity() {
                     currentTab = "CASH_IN"
                     if (viewPager.currentItem != 1) viewPager.currentItem = 1
                 }
-                updateToggleStyles(checkedId)
             }
         }
 

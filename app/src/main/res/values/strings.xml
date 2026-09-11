@@ -95,4 +95,10 @@
     <string name="cd_search_next">Next result</string>
     <string name="cd_search_close">Close search</string>
     <string name="cd_delete_image">Remove image</string>
+
+    <!-- Allocator rows. The spend/limit pair matches how the Scanner's allocation chooser
+         and the Rigor tracker already phrase it, so the same figure is never worded two
+         different ways in two places. -->
+    <string name="allocator_no_limit">No limit set</string>
+    <string name="allocator_spent_of_limit">₹%1$d / ₹%2$d</string>
 </resources>

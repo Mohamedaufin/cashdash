@@ -94,7 +94,7 @@ class AllocatorActivity : ThemedActivity() {
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
         )
-        params.setMargins(22, 28, 22, 40)
+        params.setMargins(22, 12, 22, 40)
         addView.layoutParams = params
 
         addView.findViewById<TextView>(R.id.categoryName).text = "Add new"
@@ -102,6 +102,9 @@ class AllocatorActivity : ThemedActivity() {
         addView.findViewById<TextView>(R.id.categoryLimit).visibility = View.GONE
 
         addView.findViewById<Button>(R.id.btnLimit).visibility = View.GONE
+        // Reuses item_category, so the spend bar has to go too: "Add new" has nothing to
+        // measure and would otherwise show a permanently empty track.
+        addView.findViewById<View>(R.id.categoryProgressTrack).visibility = View.GONE
 
         addView.setOnClickListener { showAddCategoryDialog() }
         categoryContainer.addView(addView)
@@ -237,7 +240,10 @@ class AllocatorActivity : ThemedActivity() {
         weekEditor.apply()
         
         val catPrefs = getSharedPreferences("CategoryPrefs", Context.MODE_PRIVATE)
-        catPrefs.edit().remove("ICON_$name").apply()
+        catPrefs.edit()
+            .remove(CategoryIconHelper.KEY_PREFIX + name)
+            .remove(CategoryIconHelper.KEY_LEGACY_PREFIX + name)
+            .apply()
 
         // Sync deletion to cloud
         FirestoreSyncManager.pushAllDataToCloud(this)
@@ -274,9 +280,13 @@ class AllocatorActivity : ThemedActivity() {
             
             // 4. Migrate Icons (CategoryPrefs)
             val catPrefs = getSharedPreferences("CategoryPrefs", Context.MODE_PRIVATE)
-            if (catPrefs.contains("ICON_$oldName")) {
-                val oldIcon = catPrefs.getInt("ICON_$oldName", 0)
-                catPrefs.edit().putInt("ICON_$newName", oldIcon).remove("ICON_$oldName").apply()
+            if (catPrefs.contains(CategoryIconHelper.KEY_PREFIX + oldName)) {
+                val oldKey = catPrefs.getString(CategoryIconHelper.KEY_PREFIX + oldName, null)
+                catPrefs.edit()
+                    .putString(CategoryIconHelper.KEY_PREFIX + newName, oldKey)
+                    .remove(CategoryIconHelper.KEY_PREFIX + oldName)
+                    .remove(CategoryIconHelper.KEY_LEGACY_PREFIX + oldName)
+                    .apply()
             }
 
             HistoryDataManager.renameCategory(this, oldName, newName)
@@ -329,11 +339,10 @@ class AllocatorActivity : ThemedActivity() {
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
         )
-        params.setMargins(22, 28, 22, 0)
+        params.setMargins(22, 12, 22, 0)
         view.layoutParams = params
 
         val btnLimit = view.findViewById<Button>(R.id.btnLimit)
-        val limitText = view.findViewById<TextView>(R.id.categoryLimit)
 
         view.findViewById<TextView>(R.id.categoryName).text = name
 
@@ -350,16 +359,9 @@ class AllocatorActivity : ThemedActivity() {
             startActivity(intent)
         }
 
-        // Load limit
-        val limitPrefs = getSharedPreferences("CategoryPrefs", Context.MODE_PRIVATE)
-        val limit = limitPrefs.getInt("LIMIT_$name", 0)
-
-        if (limit > 0) {
-            limitText.text = "Limit : ₹$limit"
-            limitText.visibility = View.VISIBLE
-        } else {
-            limitText.visibility = View.GONE
-        }
+        // Limit, spend so far, and the bar between them. Shared with AllocatorFragment, which
+        // renders the same row behind the bottom-nav tab.
+        AllocationRowBinder.bind(this, view, name)
 
         // OPEN LIMIT SET PAGE
         btnLimit.setOnClickListener {
@@ -689,7 +691,11 @@ class AllocatorActivity : ThemedActivity() {
 
                 setOnClickListener {
                     val prefs = getSharedPreferences("CategoryPrefs", android.content.Context.MODE_PRIVATE)
-                    prefs.edit().putInt("ICON_$categoryName", resId).apply()
+                    prefs.edit()
+                        .putString(CategoryIconHelper.KEY_PREFIX + categoryName,
+                            CategoryIconHelper.keyForRes(resId))
+                        .remove(CategoryIconHelper.KEY_LEGACY_PREFIX + categoryName)
+                        .apply()
                     
                     // Push to Firestore & broadcast change to other activities immediately
                     FirestoreSyncManager.pushAllDataToCloud(this@AllocatorActivity)

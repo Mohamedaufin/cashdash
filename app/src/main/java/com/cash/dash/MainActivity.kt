@@ -134,7 +134,8 @@ class MainActivity : ThemedActivity() {
                         for (cat in toRemove) {
                             categories.remove(cat)
                             editor.remove("LIMIT_$cat")
-                            editor.remove("ICON_$cat")
+                            editor.remove(CategoryIconHelper.KEY_PREFIX + cat)
+                            editor.remove(CategoryIconHelper.KEY_LEGACY_PREFIX + cat)
                         }
                         editor.putStringSet("categories", categories)
                         editor.apply()

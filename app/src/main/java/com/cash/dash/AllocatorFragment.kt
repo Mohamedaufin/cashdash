@@ -123,7 +123,7 @@ class AllocatorFragment : Fragment() {
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
         )
-        params.setMargins(22, 28, 22, 40)
+        params.setMargins(22, 12, 22, 40)
         addView.layoutParams = params
 
         val addNameText = addView.findViewById<TextView>(R.id.categoryName)
@@ -132,6 +132,9 @@ class AllocatorFragment : Fragment() {
         addIcon.setImageResource(R.drawable.ic_plus)
         addView.findViewById<TextView>(R.id.categoryLimit).visibility = View.GONE
         addView.findViewById<Button>(R.id.btnLimit).visibility = View.GONE
+        // Reuses item_category, so the spend bar has to go too: "Add new" has nothing to
+        // measure and would otherwise show a permanently empty track.
+        addView.findViewById<View>(R.id.categoryProgressTrack).visibility = View.GONE
 
         addView.setOnClickListener { showAddCategoryDialog() }
         categoryContainer.addView(addView)
@@ -262,7 +265,10 @@ class AllocatorFragment : Fragment() {
         limitPrefs.edit().remove("LIMIT_$name").apply()
         
         val catPrefs = requireContext().getSharedPreferences("CategoryPrefs", Context.MODE_PRIVATE)
-        catPrefs.edit().remove("ICON_$name").apply()
+        catPrefs.edit()
+            .remove(CategoryIconHelper.KEY_PREFIX + name)
+            .remove(CategoryIconHelper.KEY_LEGACY_PREFIX + name)
+            .apply()
 
         HistoryDataManager.deleteCategory(requireContext(), name)
     }
@@ -280,9 +286,13 @@ class AllocatorFragment : Fragment() {
             limitPrefs.edit().putInt("LIMIT_$newName", oldLimit).remove("LIMIT_$oldName").apply()
             
             val catPrefs = requireContext().getSharedPreferences("CategoryPrefs", Context.MODE_PRIVATE)
-            if (catPrefs.contains("ICON_$oldName")) {
-                val oldIcon = catPrefs.getInt("ICON_$oldName", 0)
-                catPrefs.edit().putInt("ICON_$newName", oldIcon).remove("ICON_$oldName").apply()
+            if (catPrefs.contains(CategoryIconHelper.KEY_PREFIX + oldName)) {
+                val oldKey = catPrefs.getString(CategoryIconHelper.KEY_PREFIX + oldName, null)
+                catPrefs.edit()
+                    .putString(CategoryIconHelper.KEY_PREFIX + newName, oldKey)
+                    .remove(CategoryIconHelper.KEY_PREFIX + oldName)
+                    .remove(CategoryIconHelper.KEY_LEGACY_PREFIX + oldName)
+                    .apply()
             }
 
             HistoryDataManager.renameCategory(requireContext(), oldName, newName)
@@ -296,11 +306,10 @@ class AllocatorFragment : Fragment() {
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
         )
-        params.setMargins(22, 28, 22, 0)
+        params.setMargins(22, 12, 22, 0)
         view.layoutParams = params
 
         val btnLimit = view.findViewById<Button>(R.id.btnLimit)
-        val limitText = view.findViewById<TextView>(R.id.categoryLimit)
 
         view.findViewById<TextView>(R.id.categoryName).text = name
         val iconView = view.findViewById<ImageView>(R.id.iconEdit)
@@ -312,14 +321,9 @@ class AllocatorFragment : Fragment() {
             startActivity(intent)
         }
 
-        val limitPrefs = requireContext().getSharedPreferences("CategoryPrefs", Context.MODE_PRIVATE)
-        val limit = limitPrefs.getInt("LIMIT_$name", 0)
-        if (limit > 0) {
-            limitText.text = "Limit : ₹$limit"
-            limitText.visibility = View.VISIBLE
-        } else {
-            limitText.visibility = View.GONE
-        }
+        // Limit, spend so far, and the bar between them. Shared with AllocatorActivity, which
+        // renders the same row when reached from History.
+        AllocationRowBinder.bind(requireContext(), view, name)
 
         btnLimit.setOnClickListener {
             val intent = Intent(requireContext(), SetLimitActivity::class.java)
@@ -627,7 +631,11 @@ class AllocatorFragment : Fragment() {
 
                         setOnClickListener {
                             val prefs = requireContext().getSharedPreferences("CategoryPrefs", android.content.Context.MODE_PRIVATE)
-                            prefs.edit().putInt("ICON_$name", resId).apply()
+                            prefs.edit()
+                                .putString(CategoryIconHelper.KEY_PREFIX + name,
+                                    CategoryIconHelper.keyForRes(resId))
+                                .remove(CategoryIconHelper.KEY_LEGACY_PREFIX + name)
+                                .apply()
                             
                             // Sync back immediately
                             FirestoreSyncManager.pushAllDataToCloud(requireContext())

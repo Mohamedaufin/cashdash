@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Spend that has reached or passed the limit.
+
+     Red is the one colour this row is allowed, and it is the same red the transaction list
+     uses for money going out. It appears only when something is actually wrong, which is what
+     makes it readable at a glance. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/textRedColor" />
+    <corners android:radius="2dp" />
+</shape>

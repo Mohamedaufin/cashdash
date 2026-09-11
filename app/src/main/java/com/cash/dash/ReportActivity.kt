@@ -141,11 +141,18 @@ class ReportActivity : ThemedActivity() {
                     btnPeriodSelect.visibility = View.VISIBLE
                     layoutCustomDates.visibility = View.GONE
                     lifecycleScope.launch(Dispatchers.IO) {
-                        if (!isMonthlyMode) {
-                            selectedWeekIndex = getWeekIndexForNow()
-                        }
+                        // getWeekIndexForNow() resolves AFTER the pages below have already been
+                        // built with whatever selectedWeekIndex happened to hold — 0 on a fresh
+                        // open. updatePeriodLabel() then rewrote only the dropdown, so the
+                        // selector advertised the current week while the report underneath still
+                        // held the previous one's figures. That is a wrong number under a right
+                        // label, so the pages have to be rebuilt whenever the index actually moves.
+                        val resolvedIndex = if (!isMonthlyMode) getWeekIndexForNow() else selectedWeekIndex
+                        val indexChanged = resolvedIndex != selectedWeekIndex
+                        selectedWeekIndex = resolvedIndex
                         withContext(Dispatchers.Main) {
                             updatePeriodLabel()
+                            if (indexChanged) viewPager.adapter?.notifyDataSetChanged()
                         }
                     }
                 }
@@ -432,11 +439,22 @@ class ReportActivity : ThemedActivity() {
     private fun renderReport(insights: FinancialInsightsManager.AdvisoryInsights, container: LinearLayout) {
         try {
             container.removeAllViews()
-            if (insights.totalSpent == 0f && insights.topCategories.isEmpty()) {
-                addEmptyStateCard(container); return
+
+            // Nothing was spent in this period, so show the breakdown card — which says so in
+            // words — and render none of the analysis below it.
+            //
+            // The condition used to also require topCategories to be empty, which almost never
+            // holds: a user with allocations set up has categories, they just have zero against
+            // them this week. The result was a whole report built out of zeroes, in which
+            // "Travel — Dominates 0% of budget" sat above four ₹0 (0%) rows, beside a summary
+            // reading "↓100% vs previous period". Every line was vacuous and several were
+            // actively misleading.
+            if (insights.totalSpent <= 0f) {
+                injectPieChartCard(insights, container)
+                return
             }
 
-            // 0. Render 3D Chart
+            // 0. Spend breakdown
             if (insights.topCategories.isNotEmpty()) {
                 injectPieChartCard(insights, container)
             }
@@ -550,6 +568,38 @@ class ReportActivity : ThemedActivity() {
             gravity = android.view.Gravity.CENTER
         }
         cardWrapper.addView(tvHeader)
+
+        // Nothing was spent in this period. Rendering the breakdown anyway produces a column
+        // of identical "₹0 • 0%" rows above empty bars, which looks like the screen failed to
+        // load rather than like an answer. Say the answer in words instead.
+        //
+        // This is not a rare edge: it is what every new user sees for their first week, and
+        // what any user sees on a quiet week.
+        if (insights.totalSpent <= 0f) {
+            val emptyLine = TextView(this).apply {
+                text = "No spending recorded in this period"
+                setTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
+                textSize = 15f
+                typeface = Typeface.DEFAULT_BOLD
+                gravity = android.view.Gravity.CENTER
+                setPadding(0, (26 * dp).toInt(), 0, (6 * dp).toInt())
+            }
+            val emptyHint = TextView(this).apply {
+                text = if (summaries.isEmpty()) {
+                    "Set up an allocation and record an expense to see your breakdown here."
+                } else {
+                    "Record an expense to see your breakdown here."
+                }
+                setTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textMutedColor))
+                textSize = 12f
+                gravity = android.view.Gravity.CENTER
+                setPadding((24 * dp).toInt(), 0, (24 * dp).toInt(), (26 * dp).toInt())
+            }
+            cardWrapper.addView(emptyLine)
+            cardWrapper.addView(emptyHint)
+            container.addView(cardWrapper, 0)
+            return
+        }
 
         // 2. The breakdown, as a ranked bar list.
         //
@@ -828,39 +878,9 @@ class ReportActivity : ThemedActivity() {
      * Material's default underneath to show through first.
      */
     private fun styleToggleTabs() {
-        // State lists, not flat colours per button.
-        //
-        // These are MaterialButtons inside a MaterialButtonToggleGroup, so Material owns
-        // the checked state and paints it from colorPrimary. Assigning a flat
-        // ColorStateList.valueOf() per button left that default in place underneath and
-        // then covered it, so switching tabs showed the violet checked state first and
-        // the intended colour a frame later. Handing Material a list that answers for
-        // state_checked replaces the default outright, so there is nothing to flash.
-        val activeColor = ThemeHelper.resolveColorAttr(this, R.attr.primaryActionBackground)
-        val activeTextColor = ThemeHelper.resolveColorAttr(this, R.attr.primaryActionText)
-        val inactiveTextColor = ThemeHelper.resolveColorAttr(this, R.attr.textPrimaryColor)
-
-        val checkedStates = arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf())
-        val bgTint = android.content.res.ColorStateList(
-            checkedStates, intArrayOf(activeColor, Color.TRANSPARENT)
-        )
-        val textTint = android.content.res.ColorStateList(
-            checkedStates, intArrayOf(activeTextColor, inactiveTextColor)
-        )
-
-        // The ripple. Outlined buttons take theirs from colorPrimary, so on Black it was a
-        // violet splash on every tap, independent of the background tint. A low-alpha
-        // neutral keeps the press feedback without introducing a hue.
-        val rippleTint = android.content.res.ColorStateList.valueOf(
-            (activeColor and 0x00FFFFFF) or 0x33000000
-        )
-
-        for (id in listOf(R.id.btnWeekly, R.id.btnMonthly, R.id.btnCustom)) {
-            val btn = findViewById<com.google.android.material.button.MaterialButton>(id)
-            btn.backgroundTintList = bgTint
-            btn.setTextColor(textTint)
-            btn.rippleColor = rippleTint
-        }
+        // Shared with Finminder's Cash Out / Cash In tabs; see ToggleTabStyler for why a
+        // state list is required rather than a flat colour.
+        ToggleTabStyler.apply(this, R.id.btnWeekly, R.id.btnMonthly, R.id.btnCustom)
     }
 
     inner class ReportPagerAdapter : androidx.recyclerview.widget.RecyclerView.Adapter<ReportPagerAdapter.ViewHolder>() {

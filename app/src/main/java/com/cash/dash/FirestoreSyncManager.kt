@@ -176,7 +176,10 @@ object FirestoreSyncManager {
                 categoriesSet.forEach { catName ->
                     val limit = categoryPrefs.getInt("LIMIT_$catName", 0)
                     val spent = graphPrefs.getFloat("SPENT_$catName", 0f)
-                    val icon = categoryPrefs.getInt("ICON_$catName", 0)
+                    // The stable key, not a resource id. Ids are build-specific, so syncing
+                    // one meant another device or another build restored a drawable that had
+                    // nothing to do with the user's choice.
+                    val icon = categoryPrefs.getString(CategoryIconHelper.KEY_PREFIX + catName, null) ?: ""
                     catMap[catName] = hashMapOf(
                         "limit" to limit,
                         "spent" to spent,
@@ -461,9 +464,16 @@ object FirestoreSyncManager {
                             for ((catName, valuesMap) in dataMap) {
                                 val limit = (valuesMap["limit"] as? Number)?.toInt() ?: 0
                                 val spent = (valuesMap["spent"] as? Number)?.toFloat() ?: 0f
-                                val icon = (valuesMap["icon"] as? Number)?.toInt() ?: 0
+                                // Older clients wrote a number here; it is meaningless on
+                                // this build, so only a String key is accepted.
+                                val icon = valuesMap["icon"] as? String
                                 cEdit.putInt("LIMIT_$catName", limit)
-                                cEdit.putInt("ICON_$catName", icon)
+                                cEdit.remove(CategoryIconHelper.KEY_LEGACY_PREFIX + catName)
+                                if (icon.isNullOrEmpty()) {
+                                    cEdit.remove(CategoryIconHelper.KEY_PREFIX + catName)
+                                } else {
+                                    cEdit.putString(CategoryIconHelper.KEY_PREFIX + catName, icon)
+                                }
                                 gEdit.putFloat("SPENT_$catName", spent)
                             }
                         }
@@ -809,7 +819,14 @@ object FirestoreSyncManager {
                 cEdit.putStringSet("categories", dataMap.keys)
                 for ((catName, valuesMap) in dataMap) {
                     cEdit.putInt("LIMIT_$catName", (valuesMap["limit"] as? Number)?.toInt() ?: 0)
-                    cEdit.putInt("ICON_$catName", (valuesMap["icon"] as? Number)?.toInt() ?: 0)
+                    // Only a String key is accepted; a legacy number is discarded.
+                    val iconKey = valuesMap["icon"] as? String
+                    cEdit.remove(CategoryIconHelper.KEY_LEGACY_PREFIX + catName)
+                    if (iconKey.isNullOrEmpty()) {
+                        cEdit.remove(CategoryIconHelper.KEY_PREFIX + catName)
+                    } else {
+                        cEdit.putString(CategoryIconHelper.KEY_PREFIX + catName, iconKey)
+                    }
                     gEdit.putFloat("SPENT_$catName", (valuesMap["spent"] as? Number)?.toFloat() ?: 0f)
                 }
             }

@@ -1,67 +1,117 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
+<!--
+  One allocation row on the Allocator screen.
+
+  ### Why this got shorter
+
+  The row used to be a 110dp minimum plus 28dp of horizontal padding, a 60dp icon tile and
+  18dp of margin, which came to roughly 156dp of screen each. Four allocations filled a phone.
+  Someone with six categories could not see their own budget without scrolling, on the screen
+  whose entire job is showing it.
+
+  ### Why it now shows a bar
+
+  Height alone was not the problem — the row was also not worth its space. It stated the limit
+  and nothing else, so the Allocator was a list of settings rather than a picture of where the
+  money stands. The spend against each limit is already recorded (GraphData/SPENT_*) and is
+  already shown this way in the Scanner's allocation chooser and the Rigor tracker, so putting
+  it here costs nothing new and makes the screen answer the question people actually open it
+  with.
+
+  Same track and fill drawables as the rest of the app, including the red one that takes over
+  once spend reaches the limit.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:minHeight="110dp"
-    android:paddingStart="28dp"
-    android:paddingEnd="28dp"
-    android:gravity="center_vertical"
     android:background="?attr/cardDarkBackground"
-    android:orientation="horizontal"
-    android:layout_marginBottom="18dp">
+    android:orientation="vertical"
+    android:paddingStart="16dp"
+    android:paddingTop="14dp"
+    android:paddingEnd="16dp"
+    android:paddingBottom="14dp">
 
     <LinearLayout
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:background="?attr/iconBackground"
-        android:gravity="center"
-        android:layout_marginEnd="26dp">
-
-        <ImageView
-            android:id="@+id/iconEdit"
-            android:layout_width="46dp"
-            android:layout_height="49dp"
-            android:src="@drawable/ic_edit"
-            app:tint="?attr/textPrimaryColor" />
-    </LinearLayout>
-
-    <!-- TEXT AREA -->
-    <LinearLayout
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical">
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/categoryName"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginEnd="14dp"
+            android:background="?attr/iconBackground"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/iconEdit"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_edit"
+                app:tint="?attr/textPrimaryColor" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Category"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/categoryName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Category"
+                android:textColor="?attr/textPrimaryColor"
+                android:textSize="@dimen/text_subhead"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/categoryLimit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:text="Current limit = ₹0"
+                android:textColor="?attr/textMutedColor"
+                android:textSize="@dimen/text_caption"
+                tools:text="₹350 / ₹650" />
+        </LinearLayout>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnLimit"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:background="?attr/inputBackground"
+            android:backgroundTint="@null"
+            android:elevation="0dp"
+            android:minWidth="0dp"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:stateListAnimator="@null"
+            android:text="Set Limit"
+            android:textAllCaps="false"
             android:textColor="?attr/textPrimaryColor"
-            android:textSize="@dimen/text_title"
-            android:textStyle="bold"/>
-
-        <!-- NEW SUBTITLE -->
-        <TextView
-            android:id="@+id/categoryLimit"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Current limit = ₹0"
-            android:textColor="?attr/textMutedColor"
             android:textSize="@dimen/text_caption"
-            android:layout_marginTop="6dp"/>
+            android:textStyle="bold" />
     </LinearLayout>
 
-    <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/btnLimit"
-        android:layout_width="wrap_content"
-        android:layout_height="38dp"
-        android:background="?attr/inputBackground"
-        android:backgroundTint="@null"
-        android:stateListAnimator="@null"
-        android:text="Set Limit"
-        android:textAllCaps="false"
-        android:textColor="?attr/textPrimaryColor"
-        android:textSize="@dimen/text_caption"
-        android:textStyle="bold"/>
+    <!-- Hidden by the binding when no limit is set: a bar with nothing to measure against
+         would be a permanently empty track, which reads as broken rather than as unset. -->
+    <FrameLayout
+        android:id="@+id/categoryProgressTrack"
+        android:layout_width="match_parent"
+        android:layout_height="6dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_glass_progress_outer">
+
+        <View
+            android:id="@+id/categoryProgressFill"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_glass_progress_fill" />
+    </FrameLayout>
 </LinearLayout>
