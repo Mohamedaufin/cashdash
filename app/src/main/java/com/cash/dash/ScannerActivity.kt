@@ -853,26 +853,15 @@ class ScannerActivity : ThemedActivity(), SensorEventListener {
                 payUPI(upi, amtStr, "com.dreamplug.androidapp")
             }
 
-            val layoutComingSoonToast = view.findViewById<LinearLayout>(R.id.layoutComingSoonToast)
-            var comingSoonRunnable: Runnable? = null
-            val comingSoonHandler = android.os.Handler(android.os.Looper.getMainLooper())
-
             btnGPay.setOnClickListener {
-                layoutComingSoonToast?.let { toastView ->
-                    comingSoonRunnable?.let { comingSoonHandler.removeCallbacks(it) }
-                    toastView.animate().cancel()
-                    toastView.alpha = 0f
-                    toastView.visibility = View.VISIBLE
-                    toastView.animate().alpha(1f).setDuration(200).start()
-
-                    val runnable = Runnable {
-                        toastView.animate().alpha(0f).setDuration(300).withEndAction {
-                            toastView.visibility = View.GONE
-                        }.start()
-                    }
-                    comingSoonRunnable = runnable
-                    comingSoonHandler.postDelayed(runnable, 2000)
-                }
+                if (!allocationHandled) { toast("Please select an allocation or skip"); return@setOnClickListener }
+                proceedingToPay = true
+                val amtStr = etAmount.text.toString()
+                if (amtStr.isEmpty()) return@setOnClickListener
+                pendingAmount = amtStr.toDoubleOrNull()?.toInt() ?: 0
+                selectedPaymentApp = "Google Pay"
+                dialog.dismiss()
+                payUPI(upi, amtStr, "com.google.android.apps.nbu.paisa.user")
             }
 
             dialog.setOnDismissListener {

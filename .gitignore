@@ -49,3 +49,4 @@ replace.py
 # recreated by any npm command run from the repo root and was untracked once
 # already, so ignore it rather than let `git add .` pull it back in.
 /package-lock.json
+/.freebuff/
