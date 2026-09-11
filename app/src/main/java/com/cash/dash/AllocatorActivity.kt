@@ -4,7 +4,6 @@ package com.cash.dash
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.graphics.Color
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
@@ -140,6 +139,8 @@ class AllocatorActivity : ThemedActivity() {
             setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15f)
             setHintTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
             setTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
+            background = androidx.core.content.ContextCompat.getDrawable(context, com.cash.dash.ThemeHelper.getDrawable(context, R.drawable.bg_glass_input))
+            setPadding((11 * density).toInt(), (11 * density).toInt(), (11 * density).toInt(), (11 * density).toInt())
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
                 setMargins(0, 0, 0, (28 * density).toInt())
             }
@@ -409,7 +410,8 @@ class AllocatorActivity : ThemedActivity() {
             inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
             setTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
             setHintTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
-            backgroundTintList = android.content.res.ColorStateList.valueOf(Color.CYAN)
+            background = androidx.core.content.ContextCompat.getDrawable(context, com.cash.dash.ThemeHelper.getDrawable(context, R.drawable.bg_glass_input))
+            setPadding((11 * density).toInt(), (11 * density).toInt(), (11 * density).toInt(), (11 * density).toInt())
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
                 setMargins(0, 0, 0, (28 * density).toInt())
             }
