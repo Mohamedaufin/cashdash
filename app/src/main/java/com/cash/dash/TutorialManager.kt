@@ -84,8 +84,8 @@ object TutorialManager {
                 LinearLayout.LayoutParams.MATCH_PARENT, 
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            minHeight = 150
-            setPadding(30, 30, 30, 30)
+            minHeight = (54 * density).toInt()
+            setPadding((8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt())
             setOnClickListener {
                 prefs.edit().putBoolean(tutorialKey, true).apply()
                 dialog.dismiss()

@@ -171,7 +171,7 @@ class AllocatorFragment : Fragment() {
             setHintTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
             setTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
             background = androidx.core.content.ContextCompat.getDrawable(requireContext(), com.cash.dash.ThemeHelper.getDrawable(requireContext(), R.drawable.bg_glass_input))
-            setPadding(40, 40, 40, 40)
+            setPadding((11 * density).toInt(), (11 * density).toInt(), (11 * density).toInt(), (11 * density).toInt())
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
                 setMargins(0, 0, 0, (28 * density).toInt())
             }
@@ -370,9 +370,9 @@ class AllocatorFragment : Fragment() {
             setTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
             setHintTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
             background = androidx.core.content.ContextCompat.getDrawable(context, com.cash.dash.ThemeHelper.getDrawable(context, R.drawable.bg_glass_input))
-            setPadding(40, 40, 40, 40)
+            setPadding((11 * density).toInt(), (11 * density).toInt(), (11 * density).toInt(), (11 * density).toInt())
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                setMargins(0, 0, 0, 40)
+                setMargins(0, 0, 0, (28 * density).toInt())
             }
         }
         box.addView(input)
@@ -396,9 +396,9 @@ class AllocatorFragment : Fragment() {
             background = androidx.core.content.ContextCompat.getDrawable(context, tv.resourceId)
             stateListAnimator = null
             elevation = 0f
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { setMargins(0, 0, 15, 0) }
-            minHeight = 150
-            setPadding(30,30,30,30)
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { setMargins(0, 0, (8 * density).toInt(), 0) }
+            minHeight = (54 * density).toInt()
+            setPadding((8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt())
             setOnClickListener { dialog.dismiss() }
         }
         buttonContainer.addView(btnCancel)
@@ -411,9 +411,9 @@ class AllocatorFragment : Fragment() {
             background = androidx.core.content.ContextCompat.getDrawable(context, tv.resourceId)
             stateListAnimator = null
             elevation = 0f
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { setMargins(15, 0, 0, 0) }
-            minHeight = 150
-            setPadding(30,30,30,30)
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { setMargins((8 * density).toInt(), 0, 0, 0) }
+            minHeight = (54 * density).toInt()
+            setPadding((8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt())
             setOnClickListener {
                 val newName = input.text.toString().trim().replace("|", "-")
                 if (newName.equals("Overall", ignoreCase = true)) {
@@ -486,9 +486,9 @@ class AllocatorFragment : Fragment() {
             background = androidx.core.content.ContextCompat.getDrawable(context, tv.resourceId)
             stateListAnimator = null
             elevation = 0f
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { setMargins(0, 0, 15, 0) }
-            minHeight = 150
-            setPadding(30,30,30,30)
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { setMargins(0, 0, (8 * density).toInt(), 0) }
+            minHeight = (54 * density).toInt()
+            setPadding((8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt())
             setOnClickListener {
                 dialog.dismiss()
             }
@@ -503,9 +503,9 @@ class AllocatorFragment : Fragment() {
             background = androidx.core.content.ContextCompat.getDrawable(context, tv.resourceId)
             stateListAnimator = null
             elevation = 0f
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { setMargins(15, 0, 0, 0) }
-            minHeight = 150
-            setPadding(30,30,30,30)
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { setMargins((8 * density).toInt(), 0, 0, 0) }
+            minHeight = (54 * density).toInt()
+            setPadding((8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt())
             setOnClickListener {
                 deleteCategory(name)
                 FirestoreSyncManager.pushAllDataToCloud(requireContext())

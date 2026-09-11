@@ -129,6 +129,7 @@ class RigorActivity : ThemedActivity() {
         val prefs = getSharedPreferences(PREFS, MODE_PRIVATE)
         val limitPrefs = getSharedPreferences("CategoryPrefs", MODE_PRIVATE)
         val spentPrefs = getSharedPreferences("GraphData", MODE_PRIVATE)
+        val density = resources.displayMetrics.density
 
         // Add "Create New Allocation" button at the very top of Rigor category list
         val btnCreateNew = Button(this).apply {
@@ -140,8 +141,10 @@ class RigorActivity : ThemedActivity() {
             stateListAnimator = null
             elevation = 0f
             layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, (54 * resources.displayMetrics.density).toInt()
-            ).apply { setMargins(0, 20, 0, 30) }
+                LinearLayout.LayoutParams.MATCH_PARENT, (54 * density).toInt()
+            ).apply {
+                setMargins(0, (6 * density).toInt(), 0, (16 * density).toInt())
+            }
             
             setOnClickListener {
                 showCreateCategoryDialog()

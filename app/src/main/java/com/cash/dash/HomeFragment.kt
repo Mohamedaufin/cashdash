@@ -1198,9 +1198,9 @@ class HomeFragment : Fragment() {
                 background = androidx.core.content.ContextCompat.getDrawable(context, tv.resourceId)
                 stateListAnimator = null
                 elevation = 0f
-                layoutParams = android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { setMargins(0, 0, 15, 0) }
-                minHeight = 150
-                setPadding(30, 30, 30, 30)
+                layoutParams = android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { setMargins(0, 0, (8 * density).toInt(), 0) }
+                minHeight = (54 * density).toInt()
+                setPadding((8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt())
                 setOnClickListener {
                     isPendingDialogShowing = false
                     val currentPrefs = requireContext().getSharedPreferences("PendingTransactionPrefs", android.content.Context.MODE_PRIVATE)
@@ -1222,9 +1222,9 @@ class HomeFragment : Fragment() {
                 background = androidx.core.content.ContextCompat.getDrawable(context, tv.resourceId)
                 stateListAnimator = null
                 elevation = 0f
-                layoutParams = android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { setMargins(15, 0, 0, 0) }
-                minHeight = 150
-                setPadding(30, 30, 30, 30)
+                layoutParams = android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { setMargins((8 * density).toInt(), 0, 0, 0) }
+                minHeight = (54 * density).toInt()
+                setPadding((8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt())
                 setOnClickListener {
                     isPendingDialogShowing = false
                     val currentPrefs = requireContext().getSharedPreferences("PendingTransactionPrefs", android.content.Context.MODE_PRIVATE)

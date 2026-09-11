@@ -154,8 +154,8 @@ class BalanceSetupActivity : ThemedActivity() {
                 stateListAnimator = null
                 elevation = 0f
                 layoutParams = android.widget.LinearLayout.LayoutParams(android.widget.LinearLayout.LayoutParams.MATCH_PARENT, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT).apply { setMargins(0, 0, 0, (12 * density).toInt()) }
-                minHeight = 150
-                setPadding(30, 30, 30, 30)
+                minHeight = (54 * density).toInt()
+                setPadding((8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt(), (8 * density).toInt())
                 setOnClickListener {
                     action()
                     dialog.dismiss()

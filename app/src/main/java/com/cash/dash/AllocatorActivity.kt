@@ -141,7 +141,7 @@ class AllocatorActivity : ThemedActivity() {
             setHintTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
             setTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                setMargins(0, 0, 0, 10)
+                setMargins(0, 0, 0, (28 * density).toInt())
             }
         }
         box.addView(input)
@@ -165,9 +165,10 @@ class AllocatorActivity : ThemedActivity() {
             background = androidx.core.content.ContextCompat.getDrawable(context, android.util.TypedValue().apply { context.theme.resolveAttribute(R.attr.cardBackground, this, true) }.resourceId)
             stateListAnimator = null
             elevation = 0f
-            layoutParams = LinearLayout.LayoutParams(0, 140, 1f).apply {
-                setMargins(0, 0, 15, 0)
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                setMargins(0, 0, (8 * density).toInt(), 0)
             }
+            minHeight = (54 * density).toInt()
             setOnClickListener { dialog.dismiss() }
         }
         buttonContainer.addView(btnCancel)
@@ -179,9 +180,10 @@ class AllocatorActivity : ThemedActivity() {
             background = androidx.core.content.ContextCompat.getDrawable(context, android.util.TypedValue().apply { context.theme.resolveAttribute(R.attr.cardBackground, this, true) }.resourceId)
             stateListAnimator = null
             elevation = 0f
-            layoutParams = LinearLayout.LayoutParams(0, 140, 1f).apply {
-                setMargins(15, 0, 0, 0)
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                setMargins((8 * density).toInt(), 0, 0, 0)
             }
+            minHeight = (54 * density).toInt()
             setOnClickListener {
                 val name = input.text.toString().trim().replace("|", "-")
                 if (name.equals("Overall", ignoreCase = true)) {
@@ -409,7 +411,7 @@ class AllocatorActivity : ThemedActivity() {
             setHintTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
             backgroundTintList = android.content.res.ColorStateList.valueOf(Color.CYAN)
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                setMargins(0, 0, 0, 40)
+                setMargins(0, 0, 0, (28 * density).toInt())
             }
         }
         box.addView(input)
@@ -433,9 +435,10 @@ class AllocatorActivity : ThemedActivity() {
             background = androidx.core.content.ContextCompat.getDrawable(context, android.util.TypedValue().apply { context.theme.resolveAttribute(R.attr.cardBackground, this, true) }.resourceId)
             stateListAnimator = null
             elevation = 0f
-            layoutParams = LinearLayout.LayoutParams(0, 140, 1f).apply {
-                setMargins(0, 0, 15, 0)
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                setMargins(0, 0, (8 * density).toInt(), 0)
             }
+            minHeight = (54 * density).toInt()
             setOnClickListener { dialog.dismiss() }
         }
         buttonContainer.addView(btnCancel)
@@ -447,9 +450,10 @@ class AllocatorActivity : ThemedActivity() {
             background = androidx.core.content.ContextCompat.getDrawable(context, android.util.TypedValue().apply { context.theme.resolveAttribute(R.attr.cardBackground, this, true) }.resourceId)
             stateListAnimator = null
             elevation = 0f
-            layoutParams = LinearLayout.LayoutParams(0, 140, 1f).apply {
-                setMargins(15, 0, 0, 0)
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                setMargins((8 * density).toInt(), 0, 0, 0)
             }
+            minHeight = (54 * density).toInt()
             setOnClickListener {
                 val newName = input.text.toString().trim().replace("|", "-")
                 if (newName.equals("Overall", ignoreCase = true)) {

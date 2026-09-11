@@ -373,7 +373,7 @@ class MoneyScheduleActivity : ThemedActivity() {
         }
         box.addView(btnReset)
 
-        val spacer = View(this).apply { layoutParams = LinearLayout.LayoutParams(1, 30) }
+        val spacer = View(this).apply { layoutParams = LinearLayout.LayoutParams(1, (8 * density).toInt()) }
         box.addView(spacer)
 
         val btnCancel = android.widget.Button(this).apply {
