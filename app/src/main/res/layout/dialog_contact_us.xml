@@ -187,14 +187,11 @@
             </LinearLayout>
 
             <ImageButton
+                style="@style/Widget.Cashdash.OverlayDeleteButton"
+                android:contentDescription="@string/cd_delete_attachment"
                 android:id="@+id/btnTrash1"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
                 android:layout_gravity="top|end"
-                android:background="@android:color/transparent"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_trash"
-                android:contentDescription="Delete image" />
+                android:src="@drawable/ic_trash" />
         </FrameLayout>
 
         <!-- Slot 2 -->
@@ -269,14 +266,11 @@
             </LinearLayout>
 
             <ImageButton
+                style="@style/Widget.Cashdash.OverlayDeleteButton"
+                android:contentDescription="@string/cd_delete_attachment"
                 android:id="@+id/btnTrash2"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
                 android:layout_gravity="top|end"
-                android:background="@android:color/transparent"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_trash"
-                android:contentDescription="Delete image" />
+                android:src="@drawable/ic_trash" />
         </FrameLayout>
 
         <!-- Slot 3 -->
@@ -351,14 +345,11 @@
             </LinearLayout>
 
             <ImageButton
+                style="@style/Widget.Cashdash.OverlayDeleteButton"
+                android:contentDescription="@string/cd_delete_attachment"
                 android:id="@+id/btnTrash3"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
                 android:layout_gravity="top|end"
-                android:background="@android:color/transparent"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_trash"
-                android:contentDescription="Delete image" />
+                android:src="@drawable/ic_trash" />
         </FrameLayout>
 
         <!-- Slot 4 -->
@@ -432,14 +423,11 @@
             </LinearLayout>
 
             <ImageButton
+                style="@style/Widget.Cashdash.OverlayDeleteButton"
+                android:contentDescription="@string/cd_delete_attachment"
                 android:id="@+id/btnTrash4"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
                 android:layout_gravity="top|end"
-                android:background="@android:color/transparent"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_trash"
-                android:contentDescription="Delete image" />
+                android:src="@drawable/ic_trash" />
         </FrameLayout>
 
     </LinearLayout>

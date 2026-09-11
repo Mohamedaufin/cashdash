@@ -19,13 +19,8 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageButton
+            style="@style/Widget.Cashdash.BackButton"
             android:id="@+id/btnBack"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:background="?attr/roundBackground"
-            android:padding="12dp"
-            android:src="@drawable/ic_back_arrow1"
-            android:scaleType="fitCenter"
             app:tint="?attr/textPrimaryColor" />
 
         <EditText

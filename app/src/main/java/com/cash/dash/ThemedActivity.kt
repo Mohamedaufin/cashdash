@@ -13,6 +13,21 @@ open class ThemedActivity : AppCompatActivity() {
     // onSaveInstanceState first, so no work is lost.
     private var activityCreatedTheme = ""
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Portrait, for every screen that extends this class — which is 35 of the app's 37
+        // activities.
+        //
+        // This is not a preference, it is matching the app to what actually exists. There is
+        // no layout-land/ directory: all 89 layouts are designed for portrait only, and just
+        // one activity in the manifest declared an orientation. Every other screen was free
+        // to rotate into a landscape rendering nobody had ever designed or looked at — the
+        // wallet ring and the 110dp Allocator rows in particular have nowhere to go on a
+        // short, wide screen.
+        //
+        // Set here rather than as android:screenOrientation on 39 manifest entries so it
+        // stays in one place. If landscape layouts are ever authored, delete this line and
+        // declare the orientation per activity instead.
+        requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+
         ThemeHelper.applyTheme(this)
         // Record the theme NOW so onResume() can detect if it changes
         activityCreatedTheme = ThemeHelper.getSavedTheme(this)

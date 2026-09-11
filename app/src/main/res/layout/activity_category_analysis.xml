@@ -14,12 +14,8 @@
 
         <!-- Back Button -->
         <ImageView
+            style="@style/Widget.Cashdash.BackButton"
             android:id="@+id/btnBack"
-            android:layout_width="46dp"
-            android:layout_height="46dp"
-            android:background="?attr/roundBackground"
-            android:src="@drawable/ic_back_arrow1"
-            android:padding="10dp"
             app:tint="?attr/textPrimaryColor"
             android:layout_marginTop="20dp" />
 

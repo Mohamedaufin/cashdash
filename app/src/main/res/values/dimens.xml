@@ -13,4 +13,33 @@
     <dimen name="graph_text_body">13dp</dimen>
     <dimen name="graph_text_caption">11dp</dimen>
     <dimen name="chip_stroke_width">1dp</dimen>
+
+    <!--
+      Spacing scale.
+
+      Added because the layouts had drifted badly: 2,420 hardcoded dp values against 303
+      @dimen references, which is why padding and gaps differ screen to screen for no reason.
+      A 4dp-based scale is the Material baseline and covers essentially every gap in this app.
+
+      Do not migrate every existing value at once — that is a large, risky sweep with no
+      visible payoff. Use these in NEW layouts, and convert an old screen's values when you
+      are already editing it for another reason.
+    -->
+    <dimen name="space_xxs">2dp</dimen>
+    <dimen name="space_xs">4dp</dimen>
+    <dimen name="space_sm">8dp</dimen>
+    <dimen name="space_md">16dp</dimen>
+    <dimen name="space_lg">24dp</dimen>
+    <dimen name="space_xl">32dp</dimen>
+    <dimen name="space_xxl">48dp</dimen>
+
+    <!--
+      The minimum size any tappable view may be, per the Android accessibility guideline.
+
+      This is a floor on the TOUCH TARGET, not on the artwork: an icon that should look 22dp
+      stays 22dp by sitting inside a 48dp view with padding. Several controls in this app were
+      built at the icon's size instead — a 15dp edit-balance pencil, 22dp attachment delete
+      buttons — which made destructive actions the hardest things on screen to hit.
+    -->
+    <dimen name="touch_target_min">48dp</dimen>
 </resources>

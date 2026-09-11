@@ -78,4 +78,21 @@
     <string name="intro_feature_finminder_sub">Never miss due dates, subscriptions, or lent money</string>
     <string name="intro_feature_report">Reports &amp; Statements</string>
     <string name="intro_feature_report_sub">Export clean PDF summaries for any date range</string>
+
+    <!--
+      Content descriptions for icon-only controls.
+
+      Roughly half the ImageViews in this app (55 descriptions against 112 images) had no
+      label, which makes them invisible to TalkBack: a screen reader announces an unlabelled
+      ImageButton as just "button". Every icon that performs an action needs one; purely
+      decorative images should use android:contentDescription="@null" instead, which tells
+      the reader to skip them rather than guess.
+    -->
+    <string name="cd_back">Go back</string>
+    <string name="cd_delete_attachment">Remove attachment</string>
+    <string name="cd_edit_balance">Edit wallet balance</string>
+    <string name="cd_search_previous">Previous result</string>
+    <string name="cd_search_next">Next result</string>
+    <string name="cd_search_close">Close search</string>
+    <string name="cd_delete_image">Remove image</string>
 </resources>

@@ -41,6 +41,102 @@
     </style>
 
 
+    <!--
+      ==========================================================================
+      Component styles.
+
+      Added to stop a problem the layouts already had: the same control was being
+      re-declared inline on every screen, and the copies had drifted. The back button
+      existed 24 times at 44dp, 45dp, 46dp and 50dp, with 10dp or 12dp padding, as an
+      ImageView in some files and an ImageButton in others.
+
+      These styles hold appearance only. Position stays at the call site, because the
+      24 back buttons live in different parents (ConstraintLayout, LinearLayout,
+      FrameLayout) with different constraints — which is also why this is a style and
+      not an <include>: an include would have forced restructuring 24 parent layouts
+      for no gain.
+      ==========================================================================
+    -->
+
+    <!--
+      Circular icon control in a screen header. 48dp is the accessibility floor from
+      dimens.xml; the glyph still reads at 24dp because the padding absorbs the rest.
+    -->
+    <style name="Widget.Cashdash.HeaderIconButton" parent="">
+        <item name="android:layout_width">@dimen/touch_target_min</item>
+        <item name="android:layout_height">@dimen/touch_target_min</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:background">?attr/roundBackground</item>
+    </style>
+
+    <!--
+      The back button specifically. Separate from the base so the drawable and the
+      content description live in exactly one place across all 24 screens.
+    -->
+    <style name="Widget.Cashdash.BackButton" parent="Widget.Cashdash.HeaderIconButton">
+        <item name="android:src">@drawable/ic_back_arrow1</item>
+        <item name="android:contentDescription">@string/cd_back</item>
+    </style>
+
+    <!--
+      Small icon actions inside content — attachment delete, search step, inline edit.
+      These were the worst offenders in the app: built at the icon's own size (15dp to
+      22dp) so the tappable area was a third of the guideline. The icon keeps its size
+      via padding; only the touch target grows.
+    -->
+    <style name="Widget.Cashdash.InlineIconButton" parent="">
+        <item name="android:layout_width">@dimen/touch_target_min</item>
+        <item name="android:layout_height">@dimen/touch_target_min</item>
+        <item name="android:padding">13dp</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
+    </style>
+
+    <!--
+      A destructive icon that sits ON TOP of something else — the attachment delete buttons
+      overlaying an image thumbnail.
+
+      Deliberately 40dp rather than the 48dp floor, and that is a considered exception, not an
+      oversight. These buttons delete immediately with no confirmation dialog, and the
+      thumbnail beneath them is itself tappable (it opens a fullscreen preview). Growing the
+      delete target to the full 48dp would take a noticeably bigger bite out of the preview
+      area for an unconfirmed destructive action, which trades one usability problem for a
+      worse one.
+
+      40dp is still over three times the tap area of the 22dp these were, so the control is
+      genuinely easier to hit without making an accidental delete more likely than an
+      intentional preview. If a confirmation step is ever added, raise this to
+      touch_target_min and delete this comment.
+    -->
+    <style name="Widget.Cashdash.OverlayDeleteButton" parent="">
+        <item name="android:layout_width">40dp</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:padding">9dp</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
+    <!-- Screen title beside the back button. -->
+    <style name="Text.Cashdash.ScreenTitle" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">@dimen/text_title</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/textPrimaryColor</item>
+    </style>
+
+    <!-- The small letterspaced label above a group of controls. -->
+    <style name="Text.Cashdash.SectionLabel" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">@dimen/text_caption</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.10</item>
+        <item name="android:textColor">?attr/textMutedColor</item>
+    </style>
+
     <style name="keyBtn">
         <item name="android:layout_width">0dp</item>         <!-- takes space equally -->
         <item name="android:layout_height">0dp</item>        <!-- updated to 0dp to fix scaling -->

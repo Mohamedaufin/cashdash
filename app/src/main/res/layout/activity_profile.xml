@@ -20,15 +20,10 @@
             android:layout_marginBottom="35dp">
 
             <ImageButton
+                style="@style/Widget.Cashdash.BackButton"
                 android:id="@+id/btnBack"
-                android:layout_width="45dp"
-                android:layout_height="45dp"
-                android:background="?attr/roundBackground"
-                android:src="@drawable/ic_back_arrow1"
                 app:tint="?attr/textPrimaryColor"
-                android:padding="10dp"
-                android:scaleType="fitCenter"
-                android:layout_alignParentStart="true"/>
+                android:layout_alignParentStart="true" />
 
             <TextView
                 android:layout_width="wrap_content"

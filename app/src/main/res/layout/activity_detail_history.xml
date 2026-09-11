@@ -10,12 +10,8 @@
     android:paddingBottom="0dp">
 
     <ImageView
+        style="@style/Widget.Cashdash.BackButton"
         android:id="@+id/btnBack"
-        android:src="@drawable/ic_back_arrow1"
-        android:background="?attr/roundBackground"
-        android:padding="12dp"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
         app:tint="?attr/textPrimaryColor" />
 
     <TextView

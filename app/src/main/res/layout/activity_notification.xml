@@ -115,13 +115,11 @@
         android:paddingEnd="8dp">
 
         <ImageButton
+            style="@style/Widget.Cashdash.InlineIconButton"
+            android:contentDescription="@string/cd_search_close"
             android:id="@+id/btnExitSearch"
-            android:layout_width="22dp"
-            android:layout_height="22dp"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_search_back"
-            app:tint="@color/text_secondary"
-            android:scaleType="fitCenter"/>
+            app:tint="@color/text_secondary" />
 
         <EditText
             android:id="@+id/etSearch"
@@ -158,23 +156,19 @@
                 android:layout_marginEnd="8dp"/>
 
             <ImageButton
+                style="@style/Widget.Cashdash.InlineIconButton"
+                android:contentDescription="@string/cd_search_previous"
                 android:id="@+id/btnSearchPrev"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_search_up"
-                app:tint="@color/text_secondary"
-                android:scaleType="fitCenter"/>
+                app:tint="@color/text_secondary" />
 
             <ImageButton
+                style="@style/Widget.Cashdash.InlineIconButton"
+                android:contentDescription="@string/cd_search_next"
                 android:id="@+id/btnSearchNext"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_search_down"
                 app:tint="@color/text_secondary"
-                android:layout_marginStart="8dp"
-                android:scaleType="fitCenter"/>
+                android:layout_marginStart="8dp" />
         </LinearLayout>
     </LinearLayout>
 
