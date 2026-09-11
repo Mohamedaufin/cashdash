@@ -551,31 +551,30 @@ class ReportActivity : ThemedActivity() {
         }
         cardWrapper.addView(tvHeader)
 
-        // 2. The 3D Chart
-        val chartContainer = FrameLayout(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                (200 * dp).toInt()
-            )
-        }
-        val chart = ThreeDPieChartView(this)
-        chart.layoutParams = FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.MATCH_PARENT,
-            FrameLayout.LayoutParams.MATCH_PARENT
-        )
-        // Only show segments with > 0 amount in the actual chart
-        chart.setData(summaries.filter { it.amount > 0 })
-        chartContainer.addView(chart)
-        cardWrapper.addView(chartContainer)
-
-        // 3. The Legend (Shows ALL categories, including ₹0)
-        val legendContainer = LinearLayout(this).apply {
+        // 2. The breakdown, as a ranked bar list.
+        //
+        // This replaced a 3D pie chart, and the reason is accuracy rather than taste. A pie
+        // drawn in perspective does not encode its values honestly: the tilt foreshortens the
+        // slices at the back and the extruded side wall adds visual mass to whichever slice is
+        // at the front. On real data from this app — Shopping at exactly 50% of ₹690 — the
+        // front slice read as roughly 70% of the graphic. A chart that misstates the number
+        // printed beside it is worse than no chart.
+        //
+        // Bar length is linear in the value, so 50% is half the width and nothing is hidden
+        // behind anything else. It also degrades properly at both ends, which the pie did not:
+        // a single category was an undifferentiated disc, and a ₹1 category was a sliver too
+        // thin to see at all despite having a legend entry.
+        //
+        // Ranked high to low, because the first question anyone asks a spend breakdown is
+        // "what was the biggest", and sorting answers it before the numbers are read.
+        val breakdownContainer = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            ).also { it.topMargin = (16 * dp).toInt() }
+            ).also { it.topMargin = (18 * dp).toInt() }
         }
+        val legendContainer = breakdownContainer
 
         val colorPalette = intArrayOf(
             Color.parseColor("#7C5CFC"), Color.parseColor("#FCA311"), 
@@ -588,35 +587,44 @@ class ReportActivity : ThemedActivity() {
             Color.parseColor("#C6FF00"), Color.parseColor("#651FFF")
         )
 
-        summaries.forEachIndexed { index, summary ->
+        // Ranked, so the largest spend is always the first thing read.
+        val ranked = summaries.sortedByDescending { it.amount }
+        val largest = ranked.firstOrNull()?.amount ?: 0f
+        val trackColor = ThemeHelper.resolveColorAttr(this, R.attr.progressTrackColor)
+
+        ranked.forEachIndexed { index, summary ->
+            val swatch = colorPalette[index % colorPalette.size]
+
             val row = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(0, (9 * dp).toInt(), 0, (9 * dp).toInt())
+            }
+
+            // --- name and figures on one line ---
+            val labelRow = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = android.view.Gravity.CENTER_VERTICAL
-                setPadding(0, (6 * dp).toInt(), 0, (6 * dp).toInt())
             }
 
-            // Color Indicator (Always show in legend)
             val indicator = View(this).apply {
-                layoutParams = LinearLayout.LayoutParams((12 * dp).toInt(), (12 * dp).toInt())
+                layoutParams = LinearLayout.LayoutParams((10 * dp).toInt(), (10 * dp).toInt())
                 background = android.graphics.drawable.GradientDrawable().apply {
                     shape = android.graphics.drawable.GradientDrawable.OVAL
-                    setColor(colorPalette[index % colorPalette.size])
+                    setColor(swatch)
                 }
             }
-            row.addView(indicator)
+            labelRow.addView(indicator)
 
-            // Name
             val nameTv = TextView(this).apply {
                 val displayCatName = if (summary.category.equals("no choice", ignoreCase = true)) "No Allocation" else summary.category
                 text = displayCatName.uppercase()
                 setTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
                 textSize = 13f
-                setPadding((12 * dp).toInt(), 0, 0, 0)
+                setPadding((10 * dp).toInt(), 0, 0, 0)
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             }
-            row.addView(nameTv)
+            labelRow.addView(nameTv)
 
-            // Amount & %
             val statsTv = TextView(this).apply {
                 text = "₹${summary.amount.toInt()}  •  ${summary.percentage.toInt()}%"
                 setTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
@@ -624,8 +632,58 @@ class ReportActivity : ThemedActivity() {
                 typeface = Typeface.DEFAULT_BOLD
                 gravity = android.view.Gravity.END
             }
-            row.addView(statsTv)
+            labelRow.addView(statsTv)
+            row.addView(labelRow)
 
+            // --- the bar ---
+            //
+            // Scaled against the LARGEST category rather than the total. Against the total,
+            // a realistically spread month leaves every bar stubby and hard to compare; against
+            // the largest, the top bar fills the width and the rest are read as fractions of it.
+            // The percentage of the total is already stated in text on the line above, so no
+            // information is lost by doing this.
+            //
+            // Widths come from layout weights, so they are correct on the first frame without
+            // waiting for a measure pass to learn how wide the card is.
+            val fraction = if (largest > 0f) (summary.amount / largest) else 0f
+            // A category with real spend must never render as nothing: ₹1 of ₹690 is 0.3% of
+            // the bar and would vanish, yet it is exactly the kind of entry a person is trying
+            // to find when they open this screen.
+            val drawn = when {
+                summary.amount <= 0f -> 0f
+                else -> fraction.coerceAtLeast(0.035f)
+            }
+
+            val barTrack = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    (8 * dp).toInt()
+                ).also { it.topMargin = (7 * dp).toInt() }
+                weightSum = 1f
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    cornerRadius = 4 * dp
+                    setColor(trackColor)
+                }
+            }
+
+            if (drawn > 0f) {
+                val fill = View(this).apply {
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, drawn)
+                    background = android.graphics.drawable.GradientDrawable().apply {
+                        cornerRadius = 4 * dp
+                        setColor(swatch)
+                    }
+                }
+                barTrack.addView(fill)
+            }
+            if (drawn < 1f) {
+                barTrack.addView(View(this).apply {
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f - drawn)
+                })
+            }
+
+            row.addView(barTrack)
             legendContainer.addView(row)
         }
         cardWrapper.addView(legendContainer)

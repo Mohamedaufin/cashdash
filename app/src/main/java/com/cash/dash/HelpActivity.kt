@@ -491,16 +491,12 @@ class HelpActivity : ThemedActivity() {
         closeBtn.setPadding(padding, padding, padding, padding)
 
         closeBtn.setOnClickListener { dialog.dismiss() }
-                val gestureDetector = android.view.GestureDetector(imgView.context, object : android.view.GestureDetector.SimpleOnGestureListener() {
-            override fun onSingleTapUp(e: android.view.MotionEvent): Boolean {
-                dialog.dismiss()
-                return true
-            }
-        })
-        imgView.setOnTouchListener { _, event ->
-            gestureDetector.onTouchEvent(event)
-            false
-        }
+        // setOnPhotoTapListener, never setOnTouchListener. PhotoViewAttacher installs itself
+        // as the view's OnTouchListener in its constructor, so assigning another one replaces
+        // it and silently kills pinch and double-tap zoom — which is exactly what had happened
+        // here. This is PhotoView's own API for "the photo was tapped" and leaves the gesture
+        // pipeline intact.
+        imgView.setOnPhotoTapListener { _, _, _ -> dialog.dismiss() }
         container.setOnClickListener { dialog.dismiss() }
 
         container.addView(imgView)

@@ -44,6 +44,10 @@ class BalanceSetupActivity : ThemedActivity() {
         ivEdit.setOnClickListener {
             showEditBalanceDialog(tvCurrentBalance)
         }
+        // The pencil is a 15dp glyph on purpose — it annotates a line of text and has to sit
+        // at that text's scale. Reboxing it at 48dp made it bigger than the text beside it,
+        // so the touch area is grown here instead and the glyph is left alone.
+        ivEdit.expandTouchTargetTo()
 
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { onBackPressed() }
 

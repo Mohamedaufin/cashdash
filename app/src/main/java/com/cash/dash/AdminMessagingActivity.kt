@@ -349,7 +349,10 @@ class AdminMessagingActivity : ThemedActivity() {
 
     private fun showFullscreenImagePreview(model: Any) {
         val dialog = android.app.Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
-        val imageView = ImageView(this).apply {
+        // PhotoView, not a plain ImageView: this was the one fullscreen preview in the app
+        // that could not be pinched or double-tapped to zoom. Every other preview — admin
+        // logs, promotions, contact support, help, notifications — already used it.
+        val imageView = com.github.chrisbanes.photoview.PhotoView(this).apply {
             layoutParams = android.view.ViewGroup.LayoutParams(
                 android.view.ViewGroup.LayoutParams.MATCH_PARENT,
                 android.view.ViewGroup.LayoutParams.MATCH_PARENT
@@ -379,7 +382,10 @@ class AdminMessagingActivity : ThemedActivity() {
         }
         closeBtn.setOnClickListener { dialog.dismiss() }
         frame.setOnClickListener { dialog.dismiss() }
-        imageView.setOnClickListener { dialog.dismiss() }
+        // setOnPhotoTapListener, never setOnTouchListener. PhotoViewAttacher installs itself
+        // as the view's OnTouchListener in its constructor, so assigning another one replaces
+        // it and silently kills pinch and double-tap zoom.
+        imageView.setOnPhotoTapListener { _, _, _ -> dialog.dismiss() }
         Glide.with(this).load(model).into(imageView)
         dialog.setContentView(frame)
         dialog.show()

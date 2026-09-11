@@ -55,12 +55,14 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <ImageView
-        style="@style/Widget.Cashdash.InlineIconButton"
         android:contentDescription="@string/cd_edit_balance"
         android:id="@+id/ivEditBalance"
+        android:layout_width="15dp"
+        android:layout_height="15dp"
         android:layout_marginStart="8dp"
         android:src="@drawable/ic_pencil"
         app:tint="#B0C8FF"
+        android:background="@null"
         android:clickable="true"
         android:focusable="true"
         app:layout_constraintStart_toEndOf="@id/tvCurrentBalance"
