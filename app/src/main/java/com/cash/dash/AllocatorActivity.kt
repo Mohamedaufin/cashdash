@@ -94,7 +94,9 @@ class AllocatorActivity : ThemedActivity() {
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
         )
-        params.setMargins(22, 12, 22, 40)
+        val d = resources.displayMetrics.density
+        // Pixels, not dp — see addCategoryCard.
+        params.setMargins(0, (14 * d).toInt(), 0, (32 * d).toInt())
         addView.layoutParams = params
 
         addView.findViewById<TextView>(R.id.categoryName).text = "Add new"
@@ -339,7 +341,11 @@ class AllocatorActivity : ThemedActivity() {
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
         )
-        params.setMargins(22, 12, 22, 0)
+        val d = resources.displayMetrics.density
+        // setMargins takes PIXELS, not dp. The literals here used to be raw pixels, so on a
+        // 3.75x screen "22, 16" came out as roughly 6dp and 4dp — which is why the cards sat
+        // almost flush against each other regardless of what the numbers looked like.
+        params.setMargins(0, (14 * d).toInt(), 0, 0)
         view.layoutParams = params
 
         val btnLimit = view.findViewById<Button>(R.id.btnLimit)

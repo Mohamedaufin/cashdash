@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Unfilled portion of an allocation's spend bar.
 
+     ?attr/dividerColor rather than ?attr/progressTrackColor. The latter is a solid tone tuned
+     for the Rigor tracker's tall bars sitting on the page background; on a card it lands at
+     roughly 1.3:1 against the surface and reads as a smudge or a stray underline rather than
+     as the container for the bar. dividerColor is a translucent overlay, so it holds the same
+     quiet-but-legible weight on whatever surface it is drawn on, across all three themes.
+
      Its own drawable rather than bg_glass_progress_outer, which carries a 28dp corner radius
-     and a 1dp stroke sized for the much taller Rigor tracker bar. At 4dp tall that stroke is
-     most of the bar. -->
+     and a 1dp stroke sized for a much taller bar. At 4dp tall that stroke is most of the bar. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="?attr/progressTrackColor" />
+    <solid android:color="?attr/dividerColor" />
     <corners android:radius="2dp" />
 </shape>

@@ -2,24 +2,24 @@
 <!--
   One allocation row on the Allocator screen.
 
-  ### Why this got shorter
+  ### Proportions
 
-  The row used to be a 110dp minimum plus 28dp of horizontal padding, a 60dp icon tile and
-  18dp of margin, which came to roughly 156dp of screen each. Four allocations filled a phone.
-  Someone with six categories could not see their own budget without scrolling, on the screen
-  whose entire job is showing it.
+  20dp of padding and a 48dp icon tile. An earlier pass cut these to 14dp and 44dp chasing
+  density and produced rows that were shorter but cramped — the saving came out of the
+  breathing room rather than out of anything wasted. What was actually wasted was the original
+  110dp minimum height on a row holding two lines of text, and 28dp of margin between cards;
+  those are gone, and the row is still comfortably shorter than it started.
 
-  ### Why it now shows a bar
+  ### The bar
 
-  Height alone was not the problem — the row was also not worth its space. It stated the limit
-  and nothing else, so the Allocator was a list of settings rather than a picture of where the
-  money stands. The spend against each limit is already recorded (GraphData/SPENT_*) and is
-  already shown this way in the Scanner's allocation chooser and the Rigor tracker, so putting
-  it here costs nothing new and makes the screen answer the question people actually open it
-  with.
+  Aligned under the TEXT column, not the full card width, so it reads as belonging to the
+  figures directly above it instead of as a strip laid across the bottom of the card. 4dp tall,
+  and monochrome: off-white for spend inside the limit, the app's red once it is reached.
 
-  Same track and fill drawables as the rest of the app, including the red one that takes over
-  once spend reaches the limit.
+  The previous version was a full-width 6dp purple gloss gradient, which was the only colour
+  on the screen and carried no information the "₹350 of ₹650" line was not already stating.
+  Here the bar earns its place by answering "how close am I" before the numbers are read, and
+  by turning red at exactly the threshold that matters.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -27,91 +27,85 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?attr/cardDarkBackground"
-    android:orientation="vertical"
-    android:paddingStart="16dp"
-    android:paddingTop="14dp"
-    android:paddingEnd="16dp"
-    android:paddingBottom="14dp">
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="20dp"
+    android:paddingTop="20dp"
+    android:paddingEnd="20dp"
+    android:paddingBottom="20dp">
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="16dp"
+        android:background="?attr/iconBackground"
+        android:gravity="center">
 
-        <LinearLayout
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:layout_marginEnd="14dp"
-            android:background="?attr/iconBackground"
-            android:gravity="center">
-
-            <ImageView
-                android:id="@+id/iconEdit"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_edit"
-                app:tint="?attr/textPrimaryColor" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/categoryName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Category"
-                android:textColor="?attr/textPrimaryColor"
-                android:textSize="@dimen/text_subhead"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/categoryLimit"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:text="Current limit = ₹0"
-                android:textColor="?attr/textMutedColor"
-                android:textSize="@dimen/text_caption"
-                tools:text="₹350 / ₹650" />
-        </LinearLayout>
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btnLimit"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:background="?attr/inputBackground"
-            android:backgroundTint="@null"
-            android:elevation="0dp"
-            android:minWidth="0dp"
-            android:paddingStart="14dp"
-            android:paddingEnd="14dp"
-            android:stateListAnimator="@null"
-            android:text="Set Limit"
-            android:textAllCaps="false"
-            android:textColor="?attr/textPrimaryColor"
-            android:textSize="@dimen/text_caption"
-            android:textStyle="bold" />
+        <ImageView
+            android:id="@+id/iconEdit"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_edit"
+            app:tint="?attr/textPrimaryColor" />
     </LinearLayout>
 
-    <!-- Hidden by the binding when no limit is set: a bar with nothing to measure against
-         would be a permanently empty track, which reads as broken rather than as unset. -->
-    <FrameLayout
-        android:id="@+id/categoryProgressTrack"
-        android:layout_width="match_parent"
-        android:layout_height="6dp"
-        android:layout_marginTop="12dp"
-        android:background="@drawable/bg_glass_progress_outer">
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="14dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
 
-        <View
-            android:id="@+id/categoryProgressFill"
+        <TextView
+            android:id="@+id/categoryName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Category"
+            android:textColor="?attr/textPrimaryColor"
+            android:textSize="@dimen/text_subhead"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/categoryLimit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="?attr/textMutedColor"
+            android:textSize="@dimen/text_caption"
+            tools:text="₹350 of ₹650 · ₹300 left" />
+
+        <!-- Hidden by the binder when no limit is set: a track with nothing to measure
+             against is a permanently empty bar, which reads as broken rather than unset. -->
+        <FrameLayout
+            android:id="@+id/categoryProgressTrack"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@drawable/bg_glass_progress_fill" />
-    </FrameLayout>
+            android:layout_height="4dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_allocator_track">
+
+            <View
+                android:id="@+id/categoryProgressFill"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_allocator_fill" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnLimit"
+        android:layout_width="wrap_content"
+        android:layout_height="38dp"
+        android:background="?attr/inputBackground"
+        android:backgroundTint="@null"
+        android:elevation="0dp"
+        android:minWidth="0dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:stateListAnimator="@null"
+        android:text="Set Limit"
+        android:textAllCaps="false"
+        android:textColor="?attr/textPrimaryColor"
+        android:textSize="@dimen/text_caption"
+        android:textStyle="bold" />
 </LinearLayout>
