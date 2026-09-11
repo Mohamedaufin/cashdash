@@ -27,7 +27,6 @@
     <!-- 🔍 Declare UPI apps (queries section) -->
     <queries>
         <package android:name="com.dreamplug.androidapp" /> <!-- CRED -->
-        <package android:name="com.google.android.apps.nbu.paisa.user" /> <!-- Google Pay -->
     </queries>
 
     <application
