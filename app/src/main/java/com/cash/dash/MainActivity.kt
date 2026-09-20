@@ -441,8 +441,15 @@ class MainActivity : ThemedActivity() {
         FirestoreSyncManager.updateLastActiveTime(this)
         
         val result = intent.getStringExtra("payment_status")
-        if (result == "failed") {
-            val snackbar = Snackbar.make(findViewById(android.R.id.content), "❌ Payment Failed or Cancelled", Snackbar.LENGTH_LONG)
+        val paymentMessage = when (result) {
+            "failed" -> "❌ Payment Failed or Cancelled"
+            // Not an error and not a success — the bank has the request and we will
+            // confirm with the user rather than guess at the wallet balance.
+            "pending" -> "⏳ Payment status unknown — we'll confirm shortly"
+            else -> null
+        }
+        if (paymentMessage != null) {
+            val snackbar = Snackbar.make(findViewById(android.R.id.content), paymentMessage, Snackbar.LENGTH_LONG)
             ThemeHelper.styleSnackbar(this, snackbar)
             snackbar.show()
         }

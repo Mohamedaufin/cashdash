@@ -163,18 +163,15 @@ class ScannerActivity : ThemedActivity(), SensorEventListener {
         lightSensor?.let {
             sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
         }
-        // If user returns to scanner manually (not via onActivityResult),
-        // cancel any pending recovery notification to avoid stale prompts
-        val pendingPrefs = getSharedPreferences("PendingTransactionPrefs", Context.MODE_PRIVATE)
-        if (pendingPrefs.getBoolean("has_pending", false)) {
-            pendingPrefs.edit().clear().apply()
-            // Also cancel the recovery alarm if returning normally
-            androidx.core.app.NotificationManagerCompat.from(this).cancel(999)
-            val alarmIntent = android.content.Intent(this, PaymentRecoveryAlarmReceiver::class.java)
-            val pendingIntent = android.app.PendingIntent.getBroadcast(this, 99, alarmIntent, android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE)
-            val alarmManager = getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager
-            alarmManager.cancel(pendingIntent)
-        }
+        // Returning here manually means the UPI app never handed a result back —
+        // GPay in particular keeps the user in its own task, so `onActivityResult`
+        // never fires. This used to clear the pending record and cancel the recovery
+        // prompt, on the assumption that a manual return meant nothing happened. It
+        // doesn't: the payment may well have gone through, and deleting the record
+        // was the difference between asking the user and losing the expense silently.
+        //
+        // The record and its alarm are left alone. A prompt the user dismisses costs
+        // far less than a payment that never reaches their history.
     }
 
     override fun onPause() {
@@ -625,6 +622,12 @@ class ScannerActivity : ThemedActivity(), SensorEventListener {
                 else -> ""
             }
 
+            // The UPI app names its own decline reason in `responseCode` (U30, U69,
+            // XH, ZM and so on). Nothing below reads it, so on a debug build it goes
+            // to logcat, which is the difference between diagnosing a failed payment
+            // and guessing at it.
+            logPaymentDebug("result res=$res raw=$rawResponse")
+
             val params = parseUpiResponse(rawResponse)
 
             // Helper to retrieve params case-insensitively and check direct extras
@@ -642,9 +645,25 @@ class ScannerActivity : ThemedActivity(), SensorEventListener {
 
             val status = getParam("Status", "status")
 
-            val isSuccess = status.equals("SUCCESS", ignoreCase = true) ||
-                    status.equals("SUBMITTED", ignoreCase = true) ||
+            // Three outcomes, not two.
+            //
+            // SUBMITTED (and PENDING) mean the UPI app handed the request onward and
+            // does not yet know how it ended. That is not success. Counting it as one
+            // debited the wallet for money that never moved — backing out of PhonePe
+            // produced `Status=Submitted&txnId=null` and still logged an expense.
+            //
+            // `res` is deliberately not part of the success test. UPI apps return
+            // RESULT_CANCELED alongside a perfectly good payload (PhonePe does exactly
+            // this), so requiring RESULT_OK would reject real successes. It is only
+            // trusted when there is no payload at all to read.
+            val confirmedSuccess =
+                status.equals("SUCCESS", ignoreCase = true) ||
                     (status.isEmpty() && rawResponse.contains("SUCCESS", ignoreCase = true))
+
+            val confirmedFailure =
+                status.equals("FAILURE", ignoreCase = true) ||
+                    status.equals("FAILED", ignoreCase = true) ||
+                    (rawResponse.isEmpty() && res == Activity.RESULT_CANCELED)
 
             // Restore globals if the activity was recreated
             val prefs = getSharedPreferences("PendingTransactionPrefs", Context.MODE_PRIVATE)
@@ -655,20 +674,31 @@ class ScannerActivity : ThemedActivity(), SensorEventListener {
                 selectedPaymentApp = prefs.getString("pending_app", "CRED") ?: "CRED"
             }
 
-            prefs.edit().clear().apply()
-            // Also cancel the recovery alarm if returning normally
-            androidx.core.app.NotificationManagerCompat.from(this).cancel(999)
-            val alarmIntent = android.content.Intent(this, PaymentRecoveryAlarmReceiver::class.java)
-            val pendingIntent = android.app.PendingIntent.getBroadcast(this, 99, alarmIntent, android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE)
-            val alarmManager = getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager
-            alarmManager.cancel(pendingIntent)
+            logPaymentDebug(
+                "verdict=" + when {
+                    confirmedSuccess -> "SUCCESS (expense written)"
+                    confirmedFailure -> "FAILED (nothing written)"
+                    else -> "PENDING (nothing written, recovery prompt kept)"
+                } + " status='$status'"
+            )
 
-            if (isSuccess) {
-                isFinishingFromPayment = true
-                redirectSuccess()
+            isFinishingFromPayment = true
+
+            if (confirmedSuccess || confirmedFailure) {
+                // We know how it ended, so the pending record and its recovery prompt
+                // have done their job.
+                prefs.edit().clear().apply()
+                androidx.core.app.NotificationManagerCompat.from(this).cancel(999)
+                val alarmIntent = android.content.Intent(this, PaymentRecoveryAlarmReceiver::class.java)
+                val pendingIntent = android.app.PendingIntent.getBroadcast(this, 99, alarmIntent, android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE)
+                val alarmManager = getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager
+                alarmManager.cancel(pendingIntent)
+
+                if (confirmedSuccess) redirectSuccess() else redirectFailed()
             } else {
-                isFinishingFromPayment = true
-                redirectFailed()
+                // Unknown. Leave the pending record and its alarm in place so the
+                // recovery prompt can ask the user, which is the only signal we have.
+                redirectPending()
             }
         }
         if (req == GALLERY_PICK && res == Activity.RESULT_OK) {
@@ -853,6 +883,12 @@ class ScannerActivity : ThemedActivity(), SensorEventListener {
                 payUPI(upi, amtStr, "com.dreamplug.androidapp")
             }
 
+            // "Other UPI" stays disabled. Every app except CRED either refuses the
+            // intent outright (GPay, PhonePe, Paytm, BHIM return no transaction at
+            // all) or accepts it and has the payment declined downstream (supermoney
+            // creates a real txnId, then the receiver's bank stops it as suspected
+            // fraud). The same QR scanned natively inside those apps succeeds, so the
+            // difference is provenance, not anything in the URI we build.
             val layoutComingSoonToast = view.findViewById<LinearLayout>(R.id.layoutComingSoonToast)
             var comingSoonRunnable: Runnable? = null
             val comingSoonHandler = android.os.Handler(android.os.Looper.getMainLooper())
@@ -1166,47 +1202,63 @@ class ScannerActivity : ThemedActivity(), SensorEventListener {
         dialog.show()
     }
 
+    /**
+     * Returns the scanned QR with the user's amount applied and nothing else changed.
+     *
+     * This used to parse the QR and rebuild the URI from its parts, mangling it
+     * three ways: `Uri.Builder` re-encodes every value (the '@' in a VPA became
+     * %40), the query order changed, and a synthetic `tr` was appended. A `tr` is a
+     * *merchant* transaction reference, so fabricating one made every payment assert
+     * a merchant context CashDash cannot back up.
+     *
+     * To be clear about what this does and does not fix: it is not why payments to
+     * GPay, PhonePe and Paytm fail. Testing showed those are refused on provenance —
+     * the payer app and the receiving bank both distinguish a natively scanned
+     * payment from a handed-off one, and no URI satisfies them. But a rebuilt URI is
+     * wrong on its own terms, and would corrupt a signed merchant QR the moment one
+     * arrived.
+     *
+     * So: never parse, never re-encode, never reorder, and never add a parameter
+     * the payee did not put there. The amount is spliced into the raw query string
+     * and everything else is handed on byte-for-byte, which keeps `sign`, `mc`,
+     * `orgid` and any acquirer-issued `tr` exactly as scanned.
+     */
     private fun updateUpiAmount(upiUri: String, newAmount: String): String {
-        try {
-            val uri = Uri.parse(upiUri)
-            val params = uri.queryParameterNames
-            val builder = Uri.parse("upi://pay").buildUpon()
+        val amount = newAmount.toDoubleOrNull() ?: return upiUri
+        val formattedAmt = String.format(java.util.Locale.US, "%.2f", amount)
 
-            val formattedAmt = String.format(java.util.Locale.US, "%.2f", newAmount.toDoubleOrNull() ?: 0.0)
-            builder.appendQueryParameter("am", formattedAmt)
+        val queryStart = upiUri.indexOf('?')
+        if (queryStart < 0) return "$upiUri?am=$formattedAmt"
 
-            var hasTr = false
-            for (param in params) {
-                if (param == "am") continue
-                if (param.equals("tr", ignoreCase = true)) hasTr = true
-                val values = uri.getQueryParameters(param)
-                for (value in values) {
-                    builder.appendQueryParameter(param, value)
-                }
-            }
+        val prefix = upiUri.substring(0, queryStart)
+        val query = upiUri.substring(queryStart + 1)
+        if (query.isEmpty()) return "$prefix?am=$formattedAmt"
 
-            // Inject a unique transaction reference if missing to prompt payment apps to return txn details
-            if (!hasTr) {
-                val uniqueTxnRef = "CD" + System.currentTimeMillis() + (100..999).random()
-                builder.appendQueryParameter("tr", uniqueTxnRef)
-            }
+        val pairs = query.split("&")
 
-            return builder.build().toString()
-        } catch (e: Exception) {
-            val paMatch = Regex("[?&]pa=([^&]+)").find(upiUri)?.groupValues?.get(1) ?: ""
-            val pnMatch = Regex("[?&]pn=([^&]+)").find(upiUri)?.groupValues?.get(1) ?: ""
-            val trMatch = Regex("[?&]tr=([^&]+)").find(upiUri)?.groupValues?.get(1) ?: ""
-            val formattedAmt = String.format(java.util.Locale.US, "%.2f", newAmount.toDoubleOrNull() ?: 0.0)
-            var fallback = "upi://pay?pa=$paMatch&am=$formattedAmt&cu=INR"
-            if (pnMatch.isNotEmpty()) fallback += "&pn=$pnMatch"
-            if (trMatch.isNotEmpty()) {
-                fallback += "&tr=$trMatch"
-            } else {
-                val uniqueTxnRef = "CD" + System.currentTimeMillis() + (100..999).random()
-                fallback += "&tr=$uniqueTxnRef"
-            }
-            return fallback
+        // A signed QR that already carries an amount is a dynamic merchant QR: the
+        // amount is part of what was signed, so overwriting it invalidates `sign`.
+        // Leave it entirely alone and let the UPI app charge what the merchant set.
+        // A signed QR with no amount is a static one, where the payer supplies the
+        // amount and the signature does not cover it, so that case falls through.
+        val hasSign = pairs.any { it.substringBefore('=').equals("sign", ignoreCase = true) }
+        val hasFixedAmount = pairs.any {
+            it.substringBefore('=').equals("am", ignoreCase = true) &&
+                it.substringAfter('=', "").isNotEmpty()
         }
+        if (hasSign && hasFixedAmount) return upiUri
+
+        var replaced = false
+        val rebuilt = pairs.joinToString("&") { pair ->
+            if (pair.substringBefore('=').equals("am", ignoreCase = true)) {
+                replaced = true
+                "am=$formattedAmt"
+            } else {
+                pair
+            }
+        }
+
+        return if (replaced) "$prefix?$rebuilt" else "$prefix?$rebuilt&am=$formattedAmt"
     }
 
     private fun scheduleRecoveryNotification(amount: String, upiId: String) {
@@ -1257,20 +1309,28 @@ class ScannerActivity : ThemedActivity(), SensorEventListener {
         scheduleRecoveryNotification(amount, upiId)
     }
 
-    private fun payUPI(upi: String, amt: String, pkg: String) {
+    /**
+     * Hands the payment off to a UPI app. A null [pkg] opens the system chooser so
+     * any installed UPI app can take it; a non-null one targets that app directly.
+     */
+    private fun payUPI(upi: String, amt: String, pkg: String?) {
         try {
             val paMatch = Regex("[?&]pa=([^&]+)").find(upi)?.groupValues?.get(1)
             if (paMatch == null || paMatch.isEmpty()) { toast("Invalid QR: Missing UPI ID"); return }
             val cleanPaMatch = decode(paMatch) ?: paMatch
 
             val p2pUriString = updateUpiAmount(upi, amt)
+            logPaymentDebug("launch pkg=${pkg ?: "chooser"} uri=$p2pUriString")
 
             val baseIntent = Intent(Intent.ACTION_VIEW).apply {
                 data = Uri.parse(p2pUriString)
-                setPackage(pkg)
+                if (pkg != null) setPackage(pkg)
             }
 
-            if (packageManager.resolveActivity(baseIntent, PackageManager.MATCH_DEFAULT_ONLY) != null) {
+            if (pkg == null) {
+                logPendingTransaction(amt, cleanPaMatch, p2pUriString)
+                startActivityForResult(Intent.createChooser(baseIntent, "Pay with"), PAYMENT_REQ)
+            } else if (packageManager.resolveActivity(baseIntent, PackageManager.MATCH_DEFAULT_ONLY) != null) {
                 logPendingTransaction(amt, cleanPaMatch, p2pUriString)
                 startActivityForResult(baseIntent, PAYMENT_REQ)
             } else {
@@ -1318,6 +1378,24 @@ class ScannerActivity : ThemedActivity(), SensorEventListener {
         overridePendingTransition(0, 0)
     }
 
+    /**
+     * The UPI app came back without telling us how the payment ended — typically a
+     * `SUBMITTED` status, which means the bank has the request but the outcome is
+     * still open. Nothing is written to history here; the pending record stays put
+     * and the recovery prompt asks the user once the dust settles.
+     */
+    private fun redirectPending() {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            putExtra("payment_detected", true)
+            putExtra("result", "Transaction Pending")
+            putExtra("payment_status", "pending")
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NO_ANIMATION
+        }
+        startActivity(intent)
+        finish()
+        overridePendingTransition(0, 0)
+    }
+
     private fun saveExpense(category: String, amount: Int, titleText: String) {
         val prefs = getSharedPreferences("GraphData", MODE_PRIVATE)
         val weeklyPrefs = getSharedPreferences("CategoryWeekData", MODE_PRIVATE)
@@ -1350,6 +1428,18 @@ class ScannerActivity : ThemedActivity(), SensorEventListener {
             Regex("(?i)$k=([^&]*)").find(t)?.groupValues?.get(1)
         }
     }
+    /**
+     * Payment-flow tracing, debug builds only.
+     *
+     * A UPI URI carries the payee's VPA and, on a personal QR, their name, so this
+     * must never reach a release build — the log sanitisation pass in 8427d3f
+     * stripped exactly this kind of output. `BuildConfig.DEBUG` is a compile-time
+     * constant, so R8 removes the calls entirely from release.
+     */
+    private fun logPaymentDebug(message: String) {
+        if (BuildConfig.DEBUG) android.util.Log.d("CashDashUPI", message)
+    }
+
     private fun decode(v: String?) = v?.let { URLDecoder.decode(it, "UTF-8") }
     private fun toast(s: String, gravity: Int? = null, yOffset: Int = 0) = ToastHelper.showToast(this, s, Toast.LENGTH_SHORT, gravity, yOffset)
     private fun successBeep() { try { (getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(VibrationEffect.createOneShot(150, VibrationEffect.DEFAULT_AMPLITUDE)); MediaPlayer.create(this, android.provider.Settings.System.DEFAULT_NOTIFICATION_URI).start() } catch (_: Exception) {} }
