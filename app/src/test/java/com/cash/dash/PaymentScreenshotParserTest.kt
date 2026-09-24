@@ -148,6 +148,42 @@ class PaymentScreenshotParserTest {
         assertEquals("2025-05-28", dateOf(fields.date))
     }
 
+    @Test fun paytmMoneyReceivedKeepsSenderNameAndDate() {
+        // Paytm titles incoming receipts "Money Received". No outgoing verb appears
+        // anywhere, so the success gate used to reject the whole screenshot and only
+        // the amount — recovered by a separate header scan — survived, with no name
+        // and no date.
+        val fields = PaymentScreenshotParser.parse(listOf(
+            line("Paytm", 119),
+            line("Money Received", 446),
+            line("10", 600, 91),
+            line("Rupees Ten Only", 773),
+            line("From: Joohi Sahana M A", 1165),
+            line("JA", 1206),
+            line("UPI ID: ******5358@ptyes", 1257),
+            line("To: Mohamed Aufin A R", 1501),
+            line("mohamedaufin64-4@okaxis", 1666),
+            line("Bank account linked to", 1736),
+            line("UPI Ref No: 390750706142", 1890),
+            line("07:55 PM, 14 Oct 2025", 1977),
+            line("Paytm", 2254)
+        ), 2359)
+        assertTrue(fields.isPayment)
+        assertEquals("Joohi Sahana M A", fields.title)
+        assertEquals(10, fields.amount)
+        assertEquals("2025-10-14", dateOf(fields.date))
+    }
+
+    @Test fun headerScanFMisreadStillYieldsAmount() {
+        // A header re-scan of the same receipt reported the ₹ of ₹10 as F. The glyph
+        // misread list has to include it or the recovered amount is thrown away.
+        val match = PaymentScreenshotParser.amountInCrop(listOf(
+            ReceiptLine("F10", 0, 644, 136, 300)
+        ))
+        assertEquals(10, match?.value)
+        assertEquals(AmountEvidence.GLYPH, match?.evidence)
+    }
+
     @Test fun incomingPaymentDropsFromLabelAndSeparatesTrailingInitials() {
         val fields = PaymentScreenshotParser.parse(listOf(
             line("From SAMPLE PERSON XY", 475, 28),

@@ -37,7 +37,10 @@ internal enum class AmountEvidence {
 
 /** Conservative receipt extraction: uncertain fields are left for the user to enter. */
 internal object PaymentScreenshotParser {
-    private val successWords = Regex("(?i)\\b(successful|success|completed|complete|paid|sent|debited)\\b")
+    // "received" and "credited" are the incoming half of the money verbs. Paytm titles
+    // its incoming receipts "Money Received" — without them the gate rejected the whole
+    // screenshot and only the amount, recovered by a separate scan, survived.
+    private val successWords = Regex("(?i)\\b(successful|success|completed|complete|paid|sent|debited|received|credited)\\b")
 
     // "Paid to" on its own satisfies successWords, so a declined transfer was read as a
     // completed one and logged as an expense that never left the account.
@@ -72,7 +75,10 @@ internal object PaymentScreenshotParser {
      * the symbol is lost, but no real amount starts with Z or T. Stripping one of those
      * is safe, and the result can be trusted as currency-marked.
      */
-    private val glyphPrefixedAmount = Regex("(?i)^[₹zt]\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)$")
+    // F joins the misreads: a header re-scan of the Paytm "Money Received" receipt
+    // reported the ₹ of ₹10 as F. As with Z and T, no real amount is one letter wide
+    // and made of F.
+    private val glyphPrefixedAmount = Regex("(?i)^[₹zt f]\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)$")
     private val explicitPayee = Regex("(?i)^(?:(?:paid|sent|transferred)\\s+)?to\\s*[:\\-]?\\s*(.+)$")
 
     // Money in is a transaction worth recording too, and there the other party sits
@@ -101,7 +107,11 @@ internal object PaymentScreenshotParser {
         "credit",
         // Reference-line vocabulary. "Bank Ref No" was surviving as a payee because only
         // "bank" was listed — "ref" carried the line on its own.
-        "ref", "reference", "number", "txn", "utr", "vpa", "ifsc"
+        "ref", "reference", "number", "txn", "utr", "vpa", "ifsc",
+        // Incoming-receipt vocabulary. Without a From: line these banner and amount
+        // words were the only name-shaped text left, and "Money Received" or
+        // "Rupees Ten Only" became the payee.
+        "received", "credited", "rupees"
     )
 
     /** Connectives carry no identity, so they must not rescue an all-generic line. */
@@ -151,12 +161,17 @@ internal object PaymentScreenshotParser {
         val statusText = lines.filterNot { promoWords.containsMatchIn(it.text) }
             .joinToString(" ") { it.text }
         if (failureWords.containsMatchIn(statusText)) return PaymentFields(false, null, null, null, null)
+        // A missing success banner no longer vetoes extraction: a transaction-details
+        // page or a quietly acknowledged transfer says "Successful" nowhere, and
+        // discarding it whole threw away a readable name, amount and date. Every
+        // non-failed screenshot is parsed from here on; isPayment only reports how
+        // payment-like the text looks, and the review screen is where a wrong guess
+        // gets corrected before anything is saved.
+        val moneyShape = lines.any { bareAmount.matches(it.text) || currencyAmount.containsMatchIn(it.text) }
         val isPayment = looksLikePayment ||
-            // An order page may never say "successful", so for a known shop app any
-            // money-shaped figure is enough. Still not any screenshot: it has to have
-            // a number that could be a price.
-            (merchantApp != null && lines.any { bareAmount.matches(it.text) || currencyAmount.containsMatchIn(it.text) })
-        if (!isPayment) return PaymentFields(false, null, null, null, null)
+            // A printed ₹ is payment evidence on its own; a bare number is only
+            // trusted on a page already attributable to a shop or delivery app.
+            currencyAmount.containsMatchIn(allText) || (merchantApp != null && moneyShape)
 
         val detailIndex = lines.indexOfFirst { detailWords.containsMatchIn(it.text) }
             .let { if (it < 0) lines.size else it }
