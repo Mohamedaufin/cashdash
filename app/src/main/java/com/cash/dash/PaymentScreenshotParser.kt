@@ -51,6 +51,11 @@ internal object PaymentScreenshotParser {
     // it. Promotional lines are dropped before the failure check, so "Payment Failed"
     // stays authoritative while a bonus banner loses its veto.
     private val promoWords = Regex("(?i)\\b(rewards?|cashbacks?|offers?|coupons?|promos?|promotions?|scratch\\s*cards?|bonuses?|deals?)\\b")
+    // A payment app's own receipt often scrolls a history list in beneath it, and one
+    // of those older transactions can read "Payment Failed" — about another transfer,
+    // not this one. From a history heading down, lines are other receipts, so they
+    // take no part in the failure check of the one being read.
+    private val historyWords = Regex("(?i)\\b(past\\s+transactions?|transaction\\s+history|recent\\s+transactions?)\\b")
     private val paymentWords = Regex("(?i)\\b(payment|paid|sent|debited|transaction|upi|merchant|cred|gpay|phonepe|paytm)\\b")
     // These mark the start of the details list, so they have to be field labels rather
     // than any appearance of the word. A bare `\bbank\b` matched "Finance Bank Limited"
@@ -158,7 +163,9 @@ internal object PaymentScreenshotParser {
         // runs over the receipt minus its promo lines: Paytm stamps "Reward expired"
         // over successful transfers, and the banner's bare "expired" used to reject
         // the whole screenshot before a single field was read.
-        val statusText = lines.filterNot { promoWords.containsMatchIn(it.text) }
+        val historyStart = lines.indexOfFirst { historyWords.containsMatchIn(it.text) }
+        val statusText = lines.take(if (historyStart < 0) lines.size else historyStart)
+            .filterNot { promoWords.containsMatchIn(it.text) }
             .joinToString(" ") { it.text }
         if (failureWords.containsMatchIn(statusText)) return PaymentFields(false, null, null, null, null)
         // A missing success banner no longer vetoes extraction: a transaction-details
@@ -181,14 +188,25 @@ internal object PaymentScreenshotParser {
         // "Finance Bank Limited" and `RefID` matched a reference printed above the
         // amount, each time leaving the real figure outside the search. Reference
         // numbers are excluded by the ten-million cap and by preferring ₹ instead.
+        // Without payment context a bare number is not an amount: a settings page's
+        // battery percentage read 57 was landing on the review form as the price.
+        // Only a currency-marked figure is trusted from content with no success words
+        // and no attributable shop app, and even then only as the headline evidence.
+        val hasPaymentContext = looksLikePayment || merchantApp != null
         val amountMatch = findAmount(lines, imageHeight)
+            ?.takeUnless { it.evidence == AmountEvidence.BARE && !hasPaymentContext }
         // Same reason: when the details boundary lands too early the header is empty,
         // so fall back to searching the whole receipt for a name.
         // The receipt's own payee wins over the app it came from: a Razorpay page
         // inside Zomato names "ZOMATO LTD", which is better than the bare app name.
         // The app is the fallback for order pages that name nobody at all.
-        val title = (findTitle(lines, detailIndex, amountMatch?.top)
-            ?: findTitle(lines, lines.size, amountMatch?.top)
+        // Scavenged names (header word clusters, names after a bare "Paid to" label)
+        // need payment vocabulary on the page: without it, a settings page's section
+        // heading "Battery" was the only name-shaped text and became the payee.
+        // Explicit To:/From: labels are evidence on their own and stay ungated.
+        val paymentVocabulary = looksLikePayment || paymentWords.containsMatchIn(allText)
+        val title = (findTitle(lines, detailIndex, amountMatch?.top, paymentVocabulary)
+            ?: findTitle(lines, lines.size, amountMatch?.top, paymentVocabulary)
             ?: merchantApp)?.let { preferBestSpacedDuplicate(it, lines) }
         // Prefer the receipt's main payment date over secondary dates in bank
         // details, references or a surrounding gallery UI.
@@ -257,13 +275,13 @@ internal object PaymentScreenshotParser {
         }
         .replace(Regex("\\s+"), " ")
 
-    private fun findTitle(lines: List<ReceiptLine>, detailIndex: Int, amountTop: Int?): String? {
+    private fun findTitle(lines: List<ReceiptLine>, detailIndex: Int, amountTop: Int?, allowScavengedNames: Boolean): String? {
         val header = lines.take(detailIndex)
         for (i in header.indices) {
             val line = header[i]
             explicitPayee.matchEntire(line.text)?.groupValues?.get(1)?.let(::cleanName)?.let { return it }
             receivedFrom.matchEntire(line.text)?.groupValues?.get(1)?.let(::cleanName)?.let { return it }
-            if (payeeLabelOnly.matches(line.text)) {
+            if (allowScavengedNames && payeeLabelOnly.matches(line.text)) {
                 // Two lines ahead, not one. An avatar's initials sit to the left of the
                 // name at the same height, so they sort first: "Paid to" was answering
                 // "SK" rather than "Sadeesh Kumar".
@@ -288,8 +306,10 @@ internal object PaymentScreenshotParser {
         val candidateLines = header.take(headerEnd)
             .filter { amountTop == null || it.top <= amountTop + it.height * 3 }
 
-        val headerName = findHeaderName(candidateLines)
-        if (headerName != null) return headerName
+        if (allowScavengedNames) {
+            val headerName = findHeaderName(candidateLines)
+            if (headerName != null) return headerName
+        }
 
         // Some providers show a valid "To: Name" only in the details. Never use
         // a UPI handle or the literal "UPI ID" as a person's name.

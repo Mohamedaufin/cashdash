@@ -54,6 +54,9 @@ import kotlinx.coroutines.withContext
 @androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
 class ScannerActivity : ThemedActivity(), SensorEventListener {
 
+    // Full-bleed camera: the layout declares fitsSystemWindows and consumes the insets itself.
+    override val padForStatusBar = false
+
     private companion object {
         /** Warn once per process, not once per scan — see [warnIfDeviceCompromised]. */
         @Volatile

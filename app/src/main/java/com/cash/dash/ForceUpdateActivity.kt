@@ -9,6 +9,9 @@ import android.widget.Toast
 
 class ForceUpdateActivity : ThemedActivity() {
 
+    // Centered illustration: the page is designed to draw behind the status bar.
+    override val padForStatusBar = false
+
     companion object {
         const val PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.cash.dash&hl=en_IN"
         const val EXTRA_TITLE = "extra_title"

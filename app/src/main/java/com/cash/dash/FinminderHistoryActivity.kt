@@ -13,6 +13,9 @@ import java.util.Locale
 
 class FinminderHistoryActivity : ThemedActivity() {
 
+    // Layout declares fitsSystemWindows and consumes the insets itself.
+    override val padForStatusBar = false
+
     private lateinit var adapter: FinminderHistoryAdapter
     private var finminderId: String = ""
     private lateinit var rvHistoryRef: RecyclerView

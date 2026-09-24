@@ -17,6 +17,9 @@ import kotlinx.coroutines.withContext
 
 class StatementActivity : ThemedActivity() {
 
+    // Handles its own status-bar insets (see the layout's top-bar comment).
+    override val padForStatusBar = false
+
     private lateinit var tvDateRange: TextView
     private lateinit var tvTotal: TextView
     private lateinit var rvTransactions: RecyclerView

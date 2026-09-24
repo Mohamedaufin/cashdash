@@ -22,6 +22,9 @@ import java.util.UUID
 
 class AddFinminderActivity : ThemedActivity() {
 
+    // Layout declares fitsSystemWindows and consumes the insets itself.
+    override val padForStatusBar = false
+
     private lateinit var etTitle: EditText
     private lateinit var etQuantity: EditText
     private lateinit var layoutFrequencyExpandable: LinearLayout

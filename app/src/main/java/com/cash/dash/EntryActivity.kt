@@ -32,6 +32,9 @@ import android.view.ViewGroup
 import android.view.autofill.AutofillManager
 
 class EntryActivity : ThemedActivity() {
+
+    // Vertically centered login card: no content near the top to protect.
+    override val padForStatusBar = false
     private lateinit var auth: FirebaseAuth
     private val PREFS = "AppPrefs"
     private val KEY_FIRST = "isFirstLaunch"

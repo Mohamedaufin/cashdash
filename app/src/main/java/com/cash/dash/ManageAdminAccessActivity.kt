@@ -26,6 +26,9 @@ import android.app.DatePickerDialog
 
 class ManageAdminAccessActivity : ThemedActivity() {
 
+    // Layout declares fitsSystemWindows and consumes the insets itself.
+    override val padForStatusBar = false
+
     private val userStatusList = mutableListOf<UserStatusItem>()
     private var usersListenerRegistration: com.google.firebase.firestore.ListenerRegistration? = null
     private val rtdbPresenceMap = mutableMapOf<String, Pair<String, String>>()

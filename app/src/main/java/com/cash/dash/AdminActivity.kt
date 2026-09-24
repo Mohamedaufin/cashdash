@@ -24,6 +24,9 @@ import android.app.DatePickerDialog
 
 class AdminActivity : ThemedActivity() {
 
+    // Layout declares fitsSystemWindows and consumes the insets itself.
+    override val padForStatusBar = false
+
     private val userStatusList = mutableListOf<UserStatusItem>()
     private var selectedDateCalendar = Calendar.getInstance()
     private var usersListenerRegistration: com.google.firebase.firestore.ListenerRegistration? = null

@@ -7,6 +7,40 @@ import androidx.activity.enableEdgeToEdge
 
 open class ThemedActivity : AppCompatActivity() {
 
+    /**
+     * Status-bar clearance for the content view.
+     *
+     * The window is edge to edge, so every screen needs the real inset height between
+     * the system bar and its content. Screens that used to hand-tune this with hardcoded
+     * dp values encoded one device's notch: on a taller status bar the content slid under
+     * the clock. This pads the content frame with the actual inset once, centrally.
+     *
+     * Screens that already consume the insets themselves — layouts with
+     * fitsSystemWindows="true", or activities that pad their root in code (IntroTour,
+     * Report, Statement) — must opt out, or they would be padded twice.
+     * [padTopExtraDp] is design spacing on top of the inset, replacing what the layout
+     * used to hardcode.
+     */
+    protected open val padForStatusBar: Boolean = true
+    protected open val padTopExtraDp: Float = 0f
+
+    private fun applyStatusBarPadding() {
+        if (!padForStatusBar) return
+        val content = findViewById<android.view.ViewGroup>(android.R.id.content) ?: return
+        val extraPx = (padTopExtraDp * resources.displayMetrics.density).toInt()
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(content) { v, insets ->
+            val bars = insets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.statusBars()
+                    or androidx.core.view.WindowInsetsCompat.Type.displayCutout()
+            )
+            v.setPadding(v.paddingLeft, bars.top + extraPx, v.paddingRight, v.paddingBottom)
+            insets
+        }
+        // Request now; also re-request on attach in case the listener was set after the
+        // first inset dispatch for this window.
+        androidx.core.view.ViewCompat.requestApplyInsets(content)
+    }
+
     // Tracks which theme this activity was built with.
     // If the user changes theme in ThemeActivity and returns, onResume()
     // will detect the mismatch and call recreate() — which properly calls
@@ -54,6 +88,8 @@ open class ThemedActivity : AppCompatActivity() {
         enableEdgeToEdge(statusBarStyle = statusBarStyle)
 
         super.onCreate(savedInstanceState)
+
+        applyStatusBarPadding()
 
         // Make status bar icons light/dark
         androidx.core.view.WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = isWhite

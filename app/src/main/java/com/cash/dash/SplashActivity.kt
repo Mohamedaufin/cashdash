@@ -10,6 +10,9 @@ import com.google.firebase.auth.FirebaseAuth
 
 class SplashActivity : ThemedActivity() {
 
+    // Centered splash art: no content near the top to protect.
+    override val padForStatusBar = false
+
     private val PREFS = "AppPrefs"
     private val KEY_FIRST = "isFirstLaunch"
     private val KEY_NAME = "user_name"

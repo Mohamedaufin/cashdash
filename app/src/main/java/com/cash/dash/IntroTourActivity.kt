@@ -51,6 +51,9 @@ import androidx.viewpager2.widget.ViewPager2
  */
 class IntroTourActivity : ThemedActivity() {
 
+    // Pads its root in code with the real inset (see the layout's own comment).
+    override val padForStatusBar = false
+
     private val handler = Handler(Looper.getMainLooper())
 
     private lateinit var root: View

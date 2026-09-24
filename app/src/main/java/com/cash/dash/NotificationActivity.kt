@@ -23,6 +23,9 @@ import java.net.URL
 import android.util.Log
 
 class NotificationActivity : ThemedActivity() {
+
+    // Layout declares fitsSystemWindows and consumes the insets itself.
+    override val padForStatusBar = false
     private fun getCurrentRecyclerView(): androidx.recyclerview.widget.RecyclerView? {
         if (!::viewPager.isInitialized) return null
         val innerRv = viewPager.getChildAt(0) as? androidx.recyclerview.widget.RecyclerView ?: return null

@@ -17,6 +17,9 @@ import androidx.appcompat.app.AppCompatActivity
 
 class TaptrackActivity : ThemedActivity() {
 
+    // Layout declares fitsSystemWindows and consumes the insets itself.
+    override val padForStatusBar = false
+
     private lateinit var switchTaptrack: SwitchCompat
     private lateinit var tvTaptrackStatus: TextView
     private lateinit var iconTaptrackStatus: ImageView

@@ -17,6 +17,9 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 
 class FinminderActivity : ThemedActivity() {
 
+    // Layout declares fitsSystemWindows and consumes the insets itself.
+    override val padForStatusBar = false
+
     private lateinit var viewPager: androidx.viewpager2.widget.ViewPager2
     private lateinit var pagerAdapter: FinminderPagerAdapter
     private lateinit var headerRow: View

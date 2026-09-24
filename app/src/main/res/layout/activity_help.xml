@@ -10,7 +10,7 @@
         android:id="@+id/header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="50dp"
+        android:paddingTop="8dp"
         android:paddingBottom="20dp"
         android:paddingStart="25dp"
         android:paddingEnd="25dp"

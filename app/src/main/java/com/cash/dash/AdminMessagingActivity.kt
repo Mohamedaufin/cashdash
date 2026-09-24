@@ -15,6 +15,9 @@ import kotlinx.coroutines.launch
 
 class AdminMessagingActivity : ThemedActivity() {
 
+    // Layout declares fitsSystemWindows and consumes the insets itself.
+    override val padForStatusBar = false
+
     private var isAnnouncement = false
     private var currentTab = TabType.NONE
     private val selectedEmails = mutableSetOf<String>()

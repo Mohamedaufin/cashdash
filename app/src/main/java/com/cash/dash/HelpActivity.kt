@@ -53,6 +53,11 @@ data class ImageSlotViews(
 
 class HelpActivity : ThemedActivity() {
 
+    // Sets its own insets listener on android.R.id.content below, which would replace
+    // the base class's central status-bar padding listener on the same view. Opting out
+    // and applying the top inset there as well instead.
+    override val padForStatusBar = false
+
     private val selectedImageUris = mutableListOf<Uri>()
     private val contactUploadedUrls = mutableMapOf<Uri, String>()
     private val contactUploadProgress = mutableMapOf<Uri, Int>()
@@ -125,6 +130,9 @@ class HelpActivity : ThemedActivity() {
         val root = findViewById<android.view.View>(android.R.id.content)
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
             val systemBars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+            // Same status-bar clearance the base helper applies elsewhere; the header's
+            // own 8dp is design spacing on top of this.
+            root.setPadding(root.paddingLeft, systemBars.top, root.paddingRight, root.paddingBottom)
             val btnContactUs = findViewById<android.view.View>(R.id.btnContactUs)
             val params = btnContactUs.layoutParams as ViewGroup.MarginLayoutParams
             // User requested ~0.5-1 cm of blank space (approx 40dp extra)

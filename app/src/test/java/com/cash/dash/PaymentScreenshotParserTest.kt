@@ -99,6 +99,29 @@ class PaymentScreenshotParserTest {
         assertEquals("2026-02-27", dateOf(fields.date))
     }
 
+    @Test fun randomScreenshotIsNotTurnedIntoAPayment() {
+        // The gate extracts even without a success banner, so the other side of that
+        // policy has to hold: a random screenshot (settings page, gallery info, chat
+        // list) must not arrive on the review form as a payment with a prefilled
+        // amount and payee taken from its biggest number and heading.
+        val fields = PaymentScreenshotParser.parse(listOf(
+            line("Settings", 100),
+            line("Battery", 200),
+            line("57", 210),
+            line("325 photos", 400),
+            line("14 Oct 2025", 600),
+            line("Storage 128 GB", 700)
+        ), 800)
+        assertFalse(fields.isPayment)
+        assertNull(fields.amount)
+        assertNull(fields.amountBox)
+        assertNull(fields.title)
+        // Dates are still reported for review: a receipt that lost both its success
+        // banner and its rupee glyph to OCR has exactly this shape, and it needs the
+        // date. The advisory message on the review screen is what marks it unconfirmed.
+        assertEquals("2025-10-14", dateOf(fields.date))
+    }
+
     @Test fun missingSuccessBannerStillExtractsFields() {
         // A transaction-details page or a quietly acknowledged transfer never says
         // "Successful". Extraction used to be vetoed wholesale without a success
@@ -112,6 +135,35 @@ class PaymentScreenshotParserTest {
         assertEquals("Ragini Jagtap", fields.title)
         assertEquals(500, fields.amount)
         assertEquals("2025-10-14", dateOf(fields.date))
+    }
+
+    @Test fun failedEntryInHistoryListDoesNotVetoReceipt() {
+        // super.money scrolls a "Past Transactions" list beneath the receipt, and one
+        // of those older transfers read "Payment Failed". The failure veto used to
+        // scan every line, so a receipt whose own status said "Payment Successful"
+        // was discarded because of somebody else's (well, an older) failed payment.
+        val fields = PaymentScreenshotParser.parse(listOf(
+            line("11:16", 10),
+            line("R", 80), line("Raja Gopal Tiffin", 75), line("Centre", 100),
+            line("Help", 80),
+            line("₹1", 200, 60),
+            line("Payment Successful", 237),
+            line("September 20 at 2:06 PM", 260),
+            line("You have earned 1% cashback", 300),
+            line("Paid to:", 345),
+            line("q432628877@ybl", 370),
+            line("UPI Reference ID", 410),
+            line("626348265294", 435),
+            line("Payment method", 470),
+            line("Axis 3020", 490),
+            line("Past Transactions", 660),
+            line("September '26", 680),
+            line("You Sent", 720), line("₹1", 715), line("20th Sep • 2:06 PM", 745),
+            line("Payment Failed", 855)
+        ), 980)
+        assertTrue(fields.isPayment)
+        assertEquals(1, fields.amount)
+        assertEquals("2026-09-20", dateOf(fields.date))
     }
 
     @Test fun failedPaymentIsStillRejected() {

@@ -16,6 +16,9 @@ import androidx.appcompat.app.AppCompatActivity
 
 class BalanceSetupActivity : ThemedActivity() {
 
+    // Layout declares fitsSystemWindows and consumes the insets itself.
+    override val padForStatusBar = false
+
     private val KEY_BALANCE = "wallet_balance"
 
     private lateinit var tvAmount: TextView

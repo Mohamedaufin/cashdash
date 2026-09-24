@@ -16,6 +16,9 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
 class ThemeActivity : ThemedActivity() {
 
+    // Layout declares fitsSystemWindows and consumes the insets itself.
+    override val padForStatusBar = false
+
     private lateinit var rootLayout: View
     private lateinit var btnBack: ImageButton
     private lateinit var tvTitle: TextView

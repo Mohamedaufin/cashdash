@@ -10,6 +10,9 @@ import androidx.core.view.WindowInsetsCompat
 
 class SetLimitActivity : ThemedActivity() {
 
+    // Layout declares fitsSystemWindows and consumes the insets itself.
+    override val padForStatusBar = false
+
     private lateinit var input: EditText
 
     override fun onCreate(savedInstanceState: Bundle?) {

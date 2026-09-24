@@ -18,6 +18,9 @@ import java.util.*
 
 class RigorActivity : ThemedActivity() {
 
+    // Layout declares fitsSystemWindows and consumes the insets itself.
+    override val padForStatusBar = false
+
     private lateinit var categoryList: LinearLayout
     private val PREFS = "CategoryPrefs"
     private val KEY = "categories"
