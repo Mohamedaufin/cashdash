@@ -42,7 +42,7 @@
                 android:backgroundTint="@null"
                 android:text="Daily"
                 android:drawableEnd="@drawable/ic_arrow_drop_down"
-                android:drawableTint="@color/text_dim"
+                android:drawableTint="@color/text_secondary"
                 android:paddingEnd="12dp"
                 android:paddingStart="16dp"
                 android:textAllCaps="false"
@@ -62,7 +62,7 @@
                 android:backgroundTint="@null"
                 android:text="--/--/----"
                 android:drawableEnd="@drawable/ic_arrow_drop_down"
-                android:drawableTint="@color/text_dim"
+                android:drawableTint="@color/text_secondary"
                 android:paddingEnd="12dp"
                 android:paddingStart="16dp"
                 android:textAllCaps="false"
@@ -78,7 +78,7 @@
                 android:backgroundTint="@null"
                 android:text="Overall"
                 android:drawableEnd="@drawable/ic_arrow_drop_down"
-                android:drawableTint="@color/text_dim"
+                android:drawableTint="@color/text_secondary"
                 android:paddingEnd="12dp"
                 android:paddingStart="16dp"
                 android:textAllCaps="false"
@@ -175,7 +175,7 @@
                     android:id="@+id/iconReport"
                     android:layout_width="28dp"
                     android:layout_height="28dp"
-                    android:src="@drawable/ic_search"
+                    android:src="@drawable/ic_report"
                     app:tint="?attr/textPrimaryColor"
                     android:layout_marginBottom="8dp"/>
 
@@ -330,7 +330,7 @@
                 android:layout_width="166dp"
                 android:layout_height="84dp"
                 android:src="@drawable/ic_history"
-                android:contentDescription="               History"
+                android:contentDescription="History"
                 android:translationZ="6dp"/>
 
             <TextView

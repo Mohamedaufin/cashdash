@@ -77,8 +77,12 @@ class AllocatorFragment : Fragment() {
         val savedList = prefs.getStringSet(KEY, emptySet()) ?: emptySet()
         if (savedList.isNotEmpty()) {
             val density = requireContext().resources.displayMetrics.density
-            val hint1 = TextView(requireContext()).apply {
-                text = "Tap on any allocator to view detailed insights"
+            // One hint instead of two. "Tap for insights, press and hold to edit" read
+            // like a manual for a screen that should explain itself: the row tap opens
+            // the insights and the Edit Limit button is visible on every row. The
+            // long-press edit stays as a shortcut for people who know it.
+            val hint = TextView(requireContext()).apply {
+                text = "Tap an allocation for insights"
                 setTextColor(com.cash.dash.ThemeHelper.resolveColorAttr(requireContext(), R.attr.textMutedColor))
                 setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.text_hint))
                 gravity = android.view.Gravity.CENTER
@@ -86,23 +90,10 @@ class AllocatorFragment : Fragment() {
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
                 ).apply {
-                    setMargins(0, (12 * density).toInt(), 0, 0)
+                    setMargins(0, (12 * density).toInt(), 0, (6 * density).toInt())
                 }
             }
-            val hint2 = TextView(requireContext()).apply {
-                text = "Press and hold on any allocator to edit it"
-                setTextColor(com.cash.dash.ThemeHelper.resolveColorAttr(requireContext(), R.attr.textMutedColor))
-                setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.text_hint))
-                gravity = android.view.Gravity.CENTER
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    setMargins(0, (2 * density).toInt(), 0, (6 * density).toInt())
-                }
-            }
-            categoryContainer.addView(hint1)
-            categoryContainer.addView(hint2)
+            categoryContainer.addView(hint)
         }
 
         loadCategories()

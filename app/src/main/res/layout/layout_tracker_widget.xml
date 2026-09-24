@@ -28,7 +28,7 @@
             android:gravity="center"
             android:text="Login/Register\nto continue"
             android:textColor="#FF0000"
-            android:textSize="9sp"
+            android:textSize="11sp"
             android:textStyle="bold"
             android:background="#DDF3F4F6"
             android:visibility="gone" />

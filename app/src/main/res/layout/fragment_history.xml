@@ -24,7 +24,7 @@
             android:backgroundTint="@null"
             android:text="Daily"
             android:drawableEnd="@drawable/ic_arrow_drop_down"
-            android:drawableTint="@color/text_dim"
+            android:drawableTint="@color/text_secondary"
             android:paddingEnd="12dp"
             android:paddingStart="16dp"
             android:textAllCaps="false"
@@ -46,7 +46,7 @@
             android:backgroundTint="@null"
             android:text="--/--/----"
             android:drawableEnd="@drawable/ic_arrow_drop_down"
-            android:drawableTint="@color/text_dim"
+            android:drawableTint="@color/text_secondary"
             android:paddingEnd="12dp"
             android:paddingStart="16dp"
             android:textAllCaps="false"
@@ -64,7 +64,7 @@
             android:backgroundTint="@null"
             android:text="Overall"
             android:drawableEnd="@drawable/ic_arrow_drop_down"
-            android:drawableTint="@color/text_dim"
+            android:drawableTint="@color/text_secondary"
             android:paddingEnd="12dp"
             android:paddingStart="16dp"
             android:textAllCaps="false"
@@ -112,28 +112,13 @@
         android:textColor="@color/text_secondary"
         android:textSize="@dimen/text_hint" />
 
-    <!-- GRAPH REGION. Holds the chart and, when there is nothing to chart, an empty
-         state in its place — the floating axis labels and "Daily Spending" caption
-         rendered over an empty plot looked like a broken render rather than a message. -->
-    <FrameLayout
+    <!-- GRAPH -->
+    <com.cash.dash.DayBarGraphView
+        android:id="@+id/dayGraph"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginTop="15dp">
-
-        <com.cash.dash.DayBarGraphView
-            android:id="@+id/dayGraph"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-        <include
-            android:id="@+id/emptyState"
-            layout="@layout/view_empty_state"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="gone" />
-    </FrameLayout>
+        android:layout_marginTop="15dp" />
     <!-- GRAPH TITLE -->
     <TextView
         android:id="@+id/tvGraphTitle"
@@ -161,16 +146,16 @@
             android:layout_weight="1"
             android:layout_marginEnd="6dp"
             android:background="?attr/cardBackground"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:padding="16dp"
-            android:clickable="true"
-            android:focusable="true">
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="16dp"
+        android:clickable="true"
+        android:focusable="true">
             <ImageView
                 android:id="@+id/iconReport"
                 android:layout_width="28dp"
                 android:layout_height="28dp"
-                android:src="@drawable/ic_search"
+                android:src="@drawable/ic_report"
                 app:tint="?attr/textPrimaryColor"
                 android:layout_marginBottom="8dp"/>
             <TextView
@@ -190,11 +175,11 @@
             android:layout_weight="1"
             android:layout_marginStart="6dp"
             android:background="?attr/cardBackground"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:padding="16dp"
-            android:clickable="true"
-            android:focusable="true">
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="16dp"
+        android:clickable="true"
+        android:focusable="true">
             <ImageView
                 android:id="@+id/iconStatement"
                 android:layout_width="28dp"

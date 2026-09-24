@@ -46,12 +46,14 @@ object AllocationRowBinder {
             return
         }
 
-        // "₹350 of 650" plus the remainder, because the remainder is the number people
-        // actually want and the one they would otherwise work out in their head. Once the
-        // limit is passed it flips to how far over, which is the same question inverted.
+        // "₹350 of ₹650 · 54% used · ₹300 left". The percent is the at-a-glance state
+        // the bar visualises; the remaining figure stays because it is the number people
+        // actually act on. Once the limit is passed it flips to how far over, which is
+        // the same question inverted.
         val remaining = limit - spent
+        val usedPercent = (spent * 100 / limit).coerceIn(0, 999)
         figures.text = if (remaining >= 0) {
-            context.getString(R.string.allocator_spent_with_left, spent, limit, remaining)
+            context.getString(R.string.allocator_spent_with_left, spent, limit, usedPercent, remaining)
         } else {
             context.getString(R.string.allocator_spent_with_over, spent, limit, -remaining)
         }
@@ -61,12 +63,20 @@ object AllocationRowBinder {
         // Revealed with scaleX from a pivot of zero, so growing the bar costs a matrix rather
         // than a layout pass. Clamped at full: an overspent allocation stops at the end of its
         // track rather than drawing past it.
+        //
+        // Colour is the budget ladder: green while spend is comfortable, amber from 80%
+        // as the early warning to act, red once the limit is passed. Three states on the
+        // same 4dp bar answer "how close am I" before any figure is read.
+        val fraction = spent.toFloat() / limit
         fill?.apply {
             pivotX = 0f
-            scaleX = (spent.toFloat() / limit).coerceIn(0f, 1f)
+            scaleX = fraction.coerceIn(0f, 1f)
             setBackgroundResource(
-                if (spent >= limit) R.drawable.bg_allocator_fill_over
-                else R.drawable.bg_allocator_fill
+                when {
+                    fraction >= 1f -> R.drawable.bg_allocator_fill_over
+                    fraction >= 0.8f -> R.drawable.bg_allocator_fill_warning
+                    else -> R.drawable.bg_allocator_fill
+                }
             )
         }
     }
