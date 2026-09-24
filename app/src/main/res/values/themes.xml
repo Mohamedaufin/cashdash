@@ -137,6 +137,32 @@
         <item name="android:textColor">?attr/textMutedColor</item>
     </style>
 
+    <!-- Shared semantic text roles. Keep normal UI typography on this capped scale. -->
+    <style name="Text.Cashdash.Subhead" parent="">
+        <item name="android:textSize">@dimen/text_subhead</item>
+        <item name="android:textColor">?attr/textPrimaryColor</item>
+    </style>
+
+    <style name="Text.Cashdash.Body" parent="">
+        <item name="android:textSize">@dimen/text_body</item>
+        <item name="android:textColor">?attr/textPrimaryColor</item>
+    </style>
+
+    <style name="Text.Cashdash.Caption" parent="">
+        <item name="android:textSize">@dimen/text_caption</item>
+        <item name="android:textColor">?attr/textMutedColor</item>
+    </style>
+
+    <style name="Text.Cashdash.Action" parent="">
+        <item name="android:textSize">@dimen/text_action</item>
+        <item name="android:textColor">?attr/textPrimaryColor</item>
+    </style>
+
+    <style name="Text.Cashdash.Small" parent="">
+        <item name="android:textSize">@dimen/text_small</item>
+        <item name="android:textColor">?attr/textMutedColor</item>
+    </style>
+
     <style name="keyBtn">
         <item name="android:layout_width">0dp</item>         <!-- takes space equally -->
         <item name="android:layout_height">0dp</item>        <!-- updated to 0dp to fix scaling -->

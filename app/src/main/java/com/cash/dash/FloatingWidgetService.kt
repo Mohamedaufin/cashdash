@@ -469,7 +469,7 @@ class FloatingWidgetService : Service() {
 
         val titleView = TextView(themedContext).apply {
             text = "Create New Allocation"
-            setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 18f)
+            setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 18f)
             setTextColor(ThemeHelper.resolveColorAttr(themedContext, R.attr.textPrimaryColor))
             setTypeface(null, android.graphics.Typeface.BOLD)
             gravity = Gravity.CENTER

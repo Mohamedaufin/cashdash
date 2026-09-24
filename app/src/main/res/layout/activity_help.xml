@@ -247,7 +247,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Step 2: At the top-left, tap the 'Daily/Weekly/Monthly' button, change it to Daily, then click the relevant date on the graph."
+                        android:text="Step 2: At the top-left, tap the 'Daily/Weekly/Monthly' button, change it to Daily, then tap the relevant date on the graph."
                         android:textColor="?attr/textMutedColor"
                         android:textSize="@dimen/text_body" />
                 </LinearLayout>
@@ -331,7 +331,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="A: Add a category (like 'Food'). Then click the 'Set Limit' button on the allocation card."
+                    android:text="A: Add a category (like 'Food'). Then tap the 'Set Limit' button on the allocation card."
                     android:textColor="?attr/textMutedColor"
                     android:textSize="@dimen/text_body"
                     android:layout_marginBottom="12dp"/>

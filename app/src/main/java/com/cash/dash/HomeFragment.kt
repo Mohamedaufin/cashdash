@@ -505,7 +505,8 @@ class HomeFragment : Fragment() {
 
         val balanceStr = "₹$bal/₹$displayInitial"
         if (balanceStr != lastLoadedBalance || mode != lastLoadedBarMode || type != lastLoadedBarType) {
-            view.findViewById<TextView>(R.id.tvBalance)?.text = balanceStr
+            view.findViewById<TextView>(R.id.tvBalance)?.text = "₹$bal"
+            view.findViewById<TextView>(R.id.tvBalanceCycle)?.text = "of ₹$displayInitial this cycle"
             val progressPercent = if (displayInitial > 0) ((bal.toFloat() / displayInitial.toFloat()) * 100).toInt().coerceIn(0, 100) else 0
 
             val pBar = view.findViewById<com.cash.dash.GradientCircularProgressView>(R.id.walletProgress)
@@ -515,6 +516,46 @@ class HomeFragment : Fragment() {
             lastLoadedBalance = balanceStr
             lastLoadedBarMode = mode
             lastLoadedBarType = type
+        }
+
+        loadTodaySummary(view)
+    }
+
+    /**
+     * One line of today's activity, under the ring.
+     *
+     * Reads the prefs slots rather than Room because this runs on the main thread with
+     * the rest of [loadBalance], and `DAY_*` / `SPENT_*` are already kept up to date by
+     * [HistoryDataManager.saveTransaction] for exactly this kind of lookup.
+     */
+    private fun loadTodaySummary(view: View) {
+        val summary = view.findViewById<TextView>(R.id.tvTodaySummary) ?: return
+        val graphPrefs = requireContext().getSharedPreferences("GraphData", android.content.Context.MODE_PRIVATE)
+
+        val cal = Calendar.getInstance().apply {
+            firstDayOfWeek = Calendar.MONDAY
+            minimalDaysInFirstWeek = 1
+        }
+        val week = cal.get(Calendar.WEEK_OF_MONTH) - 1
+        val day = (cal.get(Calendar.DAY_OF_WEEK) + 5) % 7
+        val spentToday = graphPrefs
+            .getFloat("DAY_${week}_${day}_${cal.get(Calendar.MONTH)}_${cal.get(Calendar.YEAR)}", 0f)
+            .toInt()
+
+        val categories = requireContext()
+            .getSharedPreferences("CategoryPrefs", android.content.Context.MODE_PRIVATE)
+            .getStringSet("categories", emptySet()) ?: emptySet()
+        val topCategory = categories
+            .map { it to graphPrefs.getFloat("SPENT_$it", 0f) }
+            .filter { it.second > 0f }
+            .maxByOrNull { it.second }
+
+        summary.text = when {
+            spentToday > 0 && topCategory != null ->
+                "₹$spentToday spent today · Most this cycle: ${topCategory.first}"
+            spentToday > 0 -> "₹$spentToday spent today"
+            topCategory != null -> "Nothing spent today · Most this cycle: ${topCategory.first}"
+            else -> "Nothing spent yet this cycle"
         }
     }
 
@@ -675,7 +716,7 @@ class HomeFragment : Fragment() {
 
         val hintContent = TextView(context).apply {
             text = "Your spending limits will also reset to ₹0."
-            setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 10f)
+                setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.text_micro))
             setTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textSecondaryColor))
             setLineSpacing(4f, 1f)
             setPadding(0, 0, 0, (24 * density).toInt())

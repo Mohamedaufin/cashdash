@@ -60,7 +60,7 @@ object AlertDialogHelper {
         items.forEachIndexed { index, itemText ->
             val tv = TextView(context).apply {
                 text = itemText
-                textSize = 15f
+                setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, context.resources.getDimension(R.dimen.text_action))
                 setPadding(
                     (4 * density).toInt(), (14 * density).toInt(),
                     (4 * density).toInt(), (14 * density).toInt()
@@ -192,7 +192,7 @@ object AlertDialogHelper {
                 val btnNeutral = Button(context).apply {
                     text = neutralText
                     isAllCaps = false
-                    textSize = 14f
+                    setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, context.resources.getDimension(R.dimen.text_body))
                     setTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
                     val tv2 = android.util.TypedValue()
                     context.theme.resolveAttribute(R.attr.cardBackground, tv2, true)
@@ -237,7 +237,7 @@ object AlertDialogHelper {
                     setBackgroundResource(tvInputBg.resourceId)
                     setTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
                     setHintTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textMutedColor))
-                    textSize = 14f
+                    setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, context.resources.getDimension(R.dimen.text_body))
                 }
                 
                 val parent = tvMessage.parent as? android.widget.LinearLayout

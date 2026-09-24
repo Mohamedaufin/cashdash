@@ -165,11 +165,9 @@ class DayBarGraphView(context: Context, attrs: AttributeSet?) : View(context, at
             textPaint.textAlign = Paint.Align.CENTER
 
             if (value == 0f) {
-                textPaint.typeface = Typeface.DEFAULT
-                textPaint.color = ThemeHelper.resolveColorAttr(context, R.attr.textMutedColor)
-                textPaint.textSize = unifiedAmountSize
-                canvas.drawText("₹0", center, bottom - 30f, textPaint)
-                
+                // No "₹0" label. A week with two spends drew five of them, and five
+                // repetitions of nothing read as data rather than as absence. The bare
+                // date under an empty column already says the day had no spending.
                 textPaint.typeface = Typeface.DEFAULT
                 val labelStr = labels[i]
                 textPaint.textSize = unifiedLabelSize

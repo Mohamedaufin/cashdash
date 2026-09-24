@@ -7,8 +7,8 @@
     <!-- Menu button -->
     <ImageView
         android:id="@+id/btnMenu"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:layout_width="@dimen/top_menu_size"
+        android:layout_height="@dimen/top_menu_size"
         android:layout_marginStart="16dp"
         android:layout_marginTop="37dp"
         android:src="@drawable/ic_glass_menu_vector"
@@ -16,6 +16,7 @@
         android:scaleType="fitCenter"
         android:clickable="true"
         android:focusable="true"
+        android:contentDescription="Menu"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
     <!-- Greeting -->
@@ -26,7 +27,7 @@
         android:layout_marginStart="14dp"
         android:layout_marginEnd="16dp"
         android:textColor="?attr/textPrimaryColor"
-        android:textSize="16.2dp"
+        android:textSize="@dimen/top_greeting_text"
         android:textStyle="bold"
         android:transitionName="greeting_text_transition"
         app:layout_constraintStart_toEndOf="@id/btnMenu"
@@ -39,14 +40,15 @@
     <!-- Taptrack button -->
     <ImageView
         android:id="@+id/btnTaptrack"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
+        android:layout_width="@dimen/top_icon_size"
+        android:layout_height="@dimen/top_icon_size"
         android:padding="4dp"
         android:layout_marginEnd="12dp"
         android:src="@drawable/ic_taptrack_icon"
         app:tint="?attr/textPrimaryColor"
         android:clickable="true"
         android:focusable="true"
+        android:contentDescription="TapTrack"
         app:layout_constraintEnd_toStartOf="@+id/btnSmartAssistant"
         app:layout_constraintTop_toTopOf="@id/btnMenu"
         app:layout_constraintBottom_toBottomOf="@id/btnMenu"/>
@@ -54,8 +56,8 @@
     <!-- Smart Assistant button -->
     <ImageView
         android:id="@+id/btnSmartAssistant"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
+        android:layout_width="@dimen/top_icon_size"
+        android:layout_height="@dimen/top_icon_size"
         android:padding="4dp"
         android:layout_marginEnd="16dp"
         android:src="?attr/finminderIcon"
@@ -63,6 +65,7 @@
         android:scaleType="fitCenter"
         android:clickable="true"
         android:focusable="true"
+        android:contentDescription="Finminder"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/btnMenu"
         app:layout_constraintBottom_toBottomOf="@id/btnMenu"/>
@@ -75,6 +78,8 @@
         android:orientation="vertical"
         android:gravity="center"
         app:layout_constraintBottom_toTopOf="@id/walletContainer"
+        app:layout_constraintTop_toBottomOf="@id/tvUsernameHome"
+        android:layout_marginTop="8dp"
         android:layout_marginBottom="12dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -85,7 +90,7 @@
             android:layout_height="wrap_content"
             android:text="Next money in 0 days"
             android:textColor="?attr/textMutedColor"
-            android:textSize="14dp"
+            android:textSize="@dimen/text_body"
             android:gravity="center"
             android:paddingHorizontal="8dp"
             android:paddingTop="2.5dp"
@@ -119,7 +124,7 @@
         app:layout_constraintBottom_toTopOf="@id/cardScanner"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="@dimen/wallet_ring_margin_top"
         android:layout_marginBottom="24dp">
 
         <com.cash.dash.GradientCircularProgressView
@@ -131,25 +136,64 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingStart="64dp"
+            android:paddingEnd="64dp">
+            <TextView
+                android:id="@+id/tvWalletLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:maxLines="1"
+                android:text="Wallet balance"
+                android:textColor="?attr/textMutedColor"
+                android:textSize="@dimen/text_body"
+                android:textStyle="bold" />
             <TextView
                 android:id="@+id/tvBalance"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="7dp"
+                android:gravity="center"
+                android:maxLines="1"
+                app:autoSizeTextType="uniform"
+                app:autoSizeMinTextSize="11sp"
+                app:autoSizeMaxTextSize="28sp"
+                app:autoSizeStepGranularity="1sp"
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="5dp"
                 android:text="₹5000"
                 android:textColor="?attr/textPrimaryColor"
                 android:textSize="@dimen/text_headline"
                 android:textStyle="bold"/>
             <TextView
-                android:layout_width="wrap_content"
+                android:id="@+id/tvBalanceCycle"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Wallet balance"
-                android:textStyle="bold"
+                android:gravity="center"
+                android:maxLines="1"
+                android:text="of ₹2000 this cycle"
                 android:textColor="?attr/textMutedColor"
-                android:textSize="@dimen/text_body"/>
+                android:textSize="@dimen/text_body"
+                app:autoSizeTextType="uniform"
+                app:autoSizeMinTextSize="8sp"
+                app:autoSizeMaxTextSize="14sp"
+                app:autoSizeStepGranularity="1sp"/>
         </LinearLayout>
     </FrameLayout>
+    <TextView
+        android:id="@+id/tvTodaySummary"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="14dp"
+        android:textColor="?attr/textMutedColor"
+        android:textSize="@dimen/text_body"
+        app:layout_constraintBottom_toTopOf="@id/cardScanner"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <!-- ACTION CARDS -->
     <LinearLayout
         android:id="@+id/cardScanner"
@@ -175,9 +219,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
-            android:text="Scanner"
+            android:text="Scan &amp; Pay"
             android:textColor="?attr/textPrimaryColor"
-            android:textSize="@dimen/text_caption"
+            android:textSize="@dimen/text_body"
             android:textStyle="bold"/>
     </LinearLayout>
     <LinearLayout
@@ -205,7 +249,7 @@
             android:layout_marginTop="2dp"
             android:text="Rigor Tracker"
             android:textColor="?attr/textPrimaryColor"
-            android:textSize="@dimen/text_caption"
+            android:textSize="@dimen/text_body"
             android:textStyle="bold"/>
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

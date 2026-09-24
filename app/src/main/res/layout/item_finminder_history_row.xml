@@ -53,7 +53,7 @@
             android:text="Mark Completed"
             android:textAllCaps="false"
             android:textColor="?android:attr/windowBackground"
-            android:textSize="10sp"
+            android:textSize="@dimen/text_micro"
             android:textStyle="bold"
             android:insetTop="0dp"
             android:insetBottom="0dp"

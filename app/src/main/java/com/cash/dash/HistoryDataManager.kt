@@ -507,6 +507,48 @@ object HistoryDataManager {
         FirestoreSyncManager.pushAllDataToCloud(context)
     }
 
+    /** What deleting a category would take with it, so the user can be told before confirming. */
+    data class CategoryImpact(val transactionCount: Int, val totalAmount: Int)
+
+    /**
+     * Counts the expenses a category delete would remove and what they add up to.
+     *
+     * Reads the prefs history rather than Room because confirmation dialogs are built
+     * on the main thread and Room is not configured for main-thread queries. The two
+     * stores are written together in [saveTransaction], so the counts agree.
+     */
+    fun getCategoryImpact(context: Context, category: String): CategoryImpact {
+        val prefsGraph = context.getSharedPreferences("GraphData", Context.MODE_PRIVATE)
+        val historyList = prefsGraph.getStringSet("HISTORY_LIST", emptySet()) ?: emptySet()
+
+        var count = 0
+        var total = 0
+        for (entry in historyList) {
+            val parts = entry.split("|")
+            if (parts.size >= 5 && parts[3] == category) {
+                count++
+                total += parts[4].toIntOrNull() ?: 0
+            }
+        }
+        return CategoryImpact(count, total)
+    }
+
+    /**
+     * Warning text for the delete confirmation, naming what actually goes and what
+     * comes back. The old copy said only that expenses would be deleted, which was
+     * both vague and — before the refund below existed — incomplete in the direction
+     * that cost the user money.
+     */
+    fun describeCategoryDeletion(context: Context, category: String): String {
+        val impact = getCategoryImpact(context, category)
+        if (impact.transactionCount == 0) {
+            return "No expenses are filed under $category, so only the allocation itself is removed."
+        }
+        val noun = if (impact.transactionCount == 1) "expense" else "expenses"
+        return "This also deletes ${impact.transactionCount} $noun totalling ₹${impact.totalAmount}, " +
+            "and returns ₹${impact.totalAmount} to your wallet balance. Continue?"
+    }
+
     fun deleteCategory(context: Context, category: String) {
         // 1. Update Room (Async)
         CoroutineScope(Dispatchers.IO).launch {
@@ -516,12 +558,35 @@ object HistoryDataManager {
         // 2. Update SharedPreferences
         val prefsGraph = context.getSharedPreferences("GraphData", Context.MODE_PRIVATE)
         val historyList = prefsGraph.getStringSet("HISTORY_LIST", emptySet())?.toMutableSet() ?: mutableSetOf()
-        val newHistoryList = historyList.filter { !it.contains("|$category|") }.toSet()
-        
+
+        // Match on the parsed category field rather than searching the whole entry.
+        // `contains("|$category|")` also matched the title, so deleting a category
+        // named Food could take an unrelated expense *titled* "Food" with it.
+        var refund = 0
+        val newHistoryList = mutableSetOf<String>()
+        for (entry in historyList) {
+            val parts = entry.split("|")
+            if (parts.size >= 5 && parts[3] == category) {
+                refund += parts[4].toIntOrNull() ?: 0
+            } else {
+                newHistoryList.add(entry)
+            }
+        }
+
         prefsGraph.edit()
             .putStringSet("HISTORY_LIST", newHistoryList)
             .remove("SPENT_$category")
             .apply()
+
+        // Deleting a single expense returns its amount to the wallet, so deleting a
+        // whole category has to return all of them. Without this the expenses vanished
+        // from history while the money stayed spent, leaving a balance the user could
+        // not reconcile against anything they could still see.
+        if (refund > 0) {
+            val prefsWallet = WalletStore.get(context)
+            val currentBal = prefsWallet.getInt("wallet_balance", 0)
+            prefsWallet.edit().putInt("wallet_balance", currentBal + refund).apply()
+        }
 
         // 3. CategoryWeekData
         val prefsWeek = context.getSharedPreferences("CategoryWeekData", Context.MODE_PRIVATE)

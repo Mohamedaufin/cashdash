@@ -117,8 +117,16 @@ class GradientCircularProgressView @JvmOverloads constructor(
         // Specific Visibility Overrides
         if (colorMode == "single") {
             if (colorType == "white") {
-                // White progress always needs the dark blue ring for contrast
-                trackColor = Color.parseColor("#08123A")
+                // The exposed track is what "already spent" looks like, so it has to be
+                // legible against the page and not only against the arc. #08123A is
+                // effectively black on a black background: the arc's start point was
+                // invisible, so the ring read as the same "mostly full" shape whether
+                // ₹1500 or ₹300 was left — hiding the one number the screen is about.
+                trackColor = if (theme == "White") {
+                    Color.parseColor("#94A3B8")
+                } else {
+                    Color.parseColor("#4A5568")
+                }
             } else if (colorType == "black" && theme == "Blue") {
                 // Black progress on Blue theme needs a white ring
                 trackColor = Color.WHITE
@@ -139,7 +147,7 @@ class GradientCircularProgressView @JvmOverloads constructor(
                 else -> Color.parseColor("#B65CFF")
             }
             progressPaint.color = color
-            progressPaint.setShadowLayer(15f, 0f, 0f, (color and 0x7FFFFFFF)) 
+            progressPaint.setShadowLayer(15f, 0f, 0f, (color and 0x7FFFFFFF))
         } else {
             when (colorType) {
                 "gradient2" -> { // Dynamic Health Color (Themed Green -> Yellow -> Red)
@@ -189,7 +197,6 @@ class GradientCircularProgressView @JvmOverloads constructor(
                     gradientMatrix.setRotate(270f, w / 2f, h / 2f)
                     sweepGradient?.setLocalMatrix(gradientMatrix)
                     progressPaint.shader = sweepGradient
-                    
                     val shadowColor = if (progress <= 15f) Color.parseColor("#80FF0033") else Color.parseColor("#80FF007A")
                     progressPaint.setShadowLayer(15f, 0f, 0f, shadowColor)
                 }
@@ -199,9 +206,9 @@ class GradientCircularProgressView @JvmOverloads constructor(
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         // Ensure ring and shadow are not clipped by adding enough internal padding
-        val pad = ringStrokeWidth / 2f + 30f 
+        val pad = ringStrokeWidth / 2f + 30f
         rectF.set(pad, pad, w - pad, h - pad)
-        
+
         trackPaint.strokeWidth = ringStrokeWidth
         progressPaint.strokeWidth = ringStrokeWidth
 

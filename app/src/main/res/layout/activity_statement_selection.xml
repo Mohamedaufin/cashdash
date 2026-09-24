@@ -91,7 +91,7 @@
                             android:layout_height="wrap_content"
                             android:text="START DATE"
                             android:textColor="?attr/textPrimaryColor"
-                            android:textSize="10sp"
+                            android:textSize="@dimen/text_micro"
                             android:letterSpacing="0.1"
                             android:alpha="0.5"/>
 
@@ -123,7 +123,7 @@
                             android:layout_height="wrap_content"
                             android:text="END DATE"
                             android:textColor="?attr/textPrimaryColor"
-                            android:textSize="10sp"
+                            android:textSize="@dimen/text_micro"
                             android:letterSpacing="0.1"
                             android:alpha="0.5"/>
 

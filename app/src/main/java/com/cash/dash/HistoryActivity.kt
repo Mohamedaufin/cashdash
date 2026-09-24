@@ -72,7 +72,7 @@ class HistoryActivity : ThemedActivity() {
 
                     title.text = "Daily Spending"
                     btnDaily.text = "Daily"
-                    findViewById<TextView>(R.id.tvGraphHint)?.text = "Click on any graph to view daily breakdown"
+                    findViewById<TextView>(R.id.tvGraphHint)?.text = "Tap on any graph to view daily breakdown"
 
                     loadDailyForSelectedWeek(graph)
                     updateDailyLabels(graph)
@@ -97,10 +97,11 @@ class HistoryActivity : ThemedActivity() {
                                 set(Calendar.DAY_OF_MONTH, 1)
                             }
                         }
-                        btnDate.text = SimpleDateFormat("MMMM d, yyyy", Locale.getDefault()).format(cal.time)
-                    }
-                    graph.setDayMode()
-                    animateGraph(graph)
+                        btnDate.text = SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(cal.time)
+                }
+                graph.setDayMode()
+                syncGraphHint(graph)
+                animateGraph(graph)
                 }
 
                 "MONTHLY_SWITCHED" -> {
@@ -122,11 +123,12 @@ class HistoryActivity : ThemedActivity() {
 
                     title.text = "Weekly Spending"
                     btnDaily.text = "Weekly"
-                    findViewById<TextView>(R.id.tvGraphHint)?.text = "Click on any week graph to view daily graph"
+                    findViewById<TextView>(R.id.tvGraphHint)?.text = "Tap on any week graph to view daily graph"
                     val cal = Calendar.getInstance().apply { set(selectedYear, selectedMonth, 1) }
-                    btnDate.text = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(cal.time)
+                    btnDate.text = SimpleDateFormat("MMM yyyy", Locale.getDefault()).format(cal.time)
 
                     graph.setWeekMode()
+                    syncGraphHint(graph)
                     animateGraph(graph)
                 }
 
@@ -393,13 +395,13 @@ class HistoryActivity : ThemedActivity() {
                 }
             } else if (currentMode == "WEEKLY") {
                 // Show Month Picker (Jan - Dec)
-                val months = listOf("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
+                val months = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
                 val displayList = months.map { "$it $selectedYear" }
                 DropdownHelper.showBlinkingDropdown(this, btn, displayList, 200) { position, _ ->
                     selectedMonth = position
                     selectedWeek = 0 // Default to first week
                     val cal = Calendar.getInstance().apply { set(selectedYear, selectedMonth, 1) }
-                    btn.text = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(cal.time)
+                    btn.text = SimpleDateFormat("MMM yyyy", Locale.getDefault()).format(cal.time)
                     loadGraphValues(graph)
                     animateGraph(graph)
                 }
@@ -420,7 +422,7 @@ class HistoryActivity : ThemedActivity() {
                             calPicked.get(Calendar.MONTH) == realC.get(Calendar.MONTH) &&
                             calPicked.get(Calendar.DAY_OF_MONTH) == realC.get(Calendar.DAY_OF_MONTH)
 
-                    val sdf = SimpleDateFormat("MMMM d, yyyy", Locale.getDefault())
+                    val sdf = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
                     btn.text = sdf.format(calPicked.time)
 
                     forcedHighlightDay = (calPicked.get(Calendar.DAY_OF_WEEK) + 5) % 7
@@ -502,7 +504,7 @@ class HistoryActivity : ThemedActivity() {
             "DAILY" -> {
                 title.text = "Daily Spending"
                 btnDaily.text = "Daily"
-                findViewById<TextView>(R.id.tvGraphHint)?.text = "Click on any graph to view daily breakdown"
+                findViewById<TextView>(R.id.tvGraphHint)?.text = "Tap on any graph to view daily breakdown"
                 loadDailyForSelectedWeek(graph)
                 updateDailyLabels(graph)
 
@@ -511,7 +513,7 @@ class HistoryActivity : ThemedActivity() {
                     btnDate.text = getTodayDate()
                 } else {
                     val cal = Calendar.getInstance().apply { set(selectedYear, selectedMonth, 1) }
-                    btnDate.text = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(cal.time)
+                    btnDate.text = SimpleDateFormat("MMM yyyy", Locale.getDefault()).format(cal.time)
                 }
                 graph.setDayMode()
             }
@@ -519,7 +521,7 @@ class HistoryActivity : ThemedActivity() {
             "WEEKLY" -> {
                 title.text = "Weekly Spending"
                 btnDaily.text = "Weekly"
-                findViewById<TextView>(R.id.tvGraphHint)?.text = "Click on any week graph to view daily graph"
+                findViewById<TextView>(R.id.tvGraphHint)?.text = "Tap on any week graph to view daily graph"
 
                 val realC = Calendar.getInstance().apply {
                     firstDayOfWeek = Calendar.MONDAY
@@ -530,21 +532,28 @@ class HistoryActivity : ThemedActivity() {
                 }
 
                 val cal = Calendar.getInstance().apply { set(selectedYear, selectedMonth, 1) }
-                btnDate.text = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(cal.time)
+                btnDate.text = SimpleDateFormat("MMM yyyy", Locale.getDefault()).format(cal.time)
                 graph.setWeekMode()
             }
 
             "MONTHLY" -> {
                 title.text = "Monthly Spending"
                 btnDaily.text = "Monthly"
-                findViewById<TextView>(R.id.tvGraphHint)?.text = "Click on any month graph to view weekly graph"
+                findViewById<TextView>(R.id.tvGraphHint)?.text = "Tap on any month graph to view weekly graph"
                 updateMonthlyLabels(graph)
                 graph.setMonthMode()
+                syncGraphHint(graph)
                 btnDate.text = selectedYear.toString()
             }
         }
 
         animateGraph(graph)
+    }
+
+    /** Re-evaluate visibility when the mode changes, not only when a data load completes. */
+    private fun syncGraphHint(graph: DayBarGraphView) {
+        findViewById<TextView>(R.id.tvGraphHint)?.visibility =
+            if (graph.hasDataForCurrentMode()) View.VISIBLE else View.GONE
     }
 
 
@@ -572,7 +581,7 @@ class HistoryActivity : ThemedActivity() {
 
     private fun getTodayDate(): String {
         val c = Calendar.getInstance()
-        val sdf = SimpleDateFormat("MMMM d, yyyy", Locale.getDefault())
+        val sdf = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
         return sdf.format(c.time)
     }
 

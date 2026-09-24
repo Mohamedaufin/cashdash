@@ -23,6 +23,7 @@ object AllocationRowBinder {
         val figures = row.findViewById<TextView>(R.id.categoryLimit) ?: return
         val track = row.findViewById<FrameLayout>(R.id.categoryProgressTrack)
         val fill = row.findViewById<View>(R.id.categoryProgressFill)
+        val limitButton = row.findViewById<TextView>(R.id.btnLimit)
 
         val limit = context.getSharedPreferences("CategoryPrefs", Context.MODE_PRIVATE)
             .getInt("LIMIT_$categoryName", 0)
@@ -30,6 +31,13 @@ object AllocationRowBinder {
             .getFloat("SPENT_$categoryName", 0f)
             .coerceAtLeast(0f)
             .toInt()
+
+        // The button is laid out as "Set Limit" and used to keep saying so next to a row
+        // already reading "₹371 of ₹650", which made the screen look unaware of its own
+        // state. It offers to set a limit only when there isn't one.
+        limitButton?.text = context.getString(
+            if (limit > 0) R.string.allocator_edit_limit else R.string.allocator_set_limit
+        )
 
         if (limit <= 0) {
             figures.text = context.getString(R.string.allocator_no_limit)

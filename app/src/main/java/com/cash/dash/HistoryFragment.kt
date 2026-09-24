@@ -163,7 +163,7 @@ class HistoryFragment : Fragment() {
                 selectedWeek = index
                 title.text = "Daily Spending"
                 btnDaily.text = "Daily"
-                view?.findViewById<TextView>(R.id.tvGraphHint)?.text = "Click on any graph to view daily breakdown"
+                view?.findViewById<TextView>(R.id.tvGraphHint)?.text = "Tap on any graph to view daily breakdown"
                 loadDailyForSelectedWeek(graph)
                 updateDailyLabels(graph)
 
@@ -187,7 +187,7 @@ class HistoryFragment : Fragment() {
                             set(Calendar.DAY_OF_MONTH, 1)
                         }
                     }
-                    btnDate.text = SimpleDateFormat("MMMM d, yyyy", Locale.getDefault()).format(cal.time)
+                    btnDate.text = SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(cal.time)
                 }
                 graph.setDayMode()
                 animateGraph(graph)
@@ -207,9 +207,9 @@ class HistoryFragment : Fragment() {
                 loadGraphValues(graph)
                 title.text = "Weekly Spending"
                 btnDaily.text = "Weekly"
-                view?.findViewById<TextView>(R.id.tvGraphHint)?.text = "Click on any week graph to view daily graph"
+                view?.findViewById<TextView>(R.id.tvGraphHint)?.text = "Tap on any week graph to view daily graph"
                 val cal = Calendar.getInstance().apply { set(selectedYear, selectedMonth, 1) }
-                btnDate.text = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(cal.time)
+                btnDate.text = SimpleDateFormat("MMM yyyy", Locale.getDefault()).format(cal.time)
                 graph.setWeekMode()
                 animateGraph(graph)
             }
@@ -340,33 +340,42 @@ class HistoryFragment : Fragment() {
             "DAILY" -> {
                 title.text = "Daily Spending"
                 btnDaily.text = "Daily"
-                view?.findViewById<TextView>(R.id.tvGraphHint)?.text = "Click on any graph to view daily breakdown"
+                view?.findViewById<TextView>(R.id.tvGraphHint)?.text = "Tap on any graph to view daily breakdown"
                 loadDailyForSelectedWeek(graph)
                 updateDailyLabels(graph)
                 val realC = Calendar.getInstance()
-                btnDate.text = if (selectedYear == realC.get(Calendar.YEAR) && selectedMonth == realC.get(Calendar.MONTH)) getTodayDate() else SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(Calendar.getInstance().apply { set(selectedYear, selectedMonth, 1) }.time)
+                btnDate.text = if (selectedYear == realC.get(Calendar.YEAR) && selectedMonth == realC.get(Calendar.MONTH)) getTodayDate() else SimpleDateFormat("MMM yyyy", Locale.getDefault()).format(Calendar.getInstance().apply { set(selectedYear, selectedMonth, 1) }.time)
                 graph.setDayMode()
+                syncGraphHint(graph)
             }
             "WEEKLY" -> {
                 title.text = "Weekly Spending"
                 btnDaily.text = "Weekly"
-                view?.findViewById<TextView>(R.id.tvGraphHint)?.text = "Click on any week graph to view daily graph"
+                view?.findViewById<TextView>(R.id.tvGraphHint)?.text = "Tap on any week graph to view daily graph"
                 val realC = Calendar.getInstance().apply { firstDayOfWeek = Calendar.MONDAY; minimalDaysInFirstWeek = 1 }
                 if (selectedYear == realC.get(Calendar.YEAR) && selectedMonth == realC.get(Calendar.MONTH)) selectedWeek = realC.get(Calendar.WEEK_OF_MONTH) - 1
                 val cal = Calendar.getInstance().apply { set(selectedYear, selectedMonth, 1) }
-                btnDate.text = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(cal.time)
+                btnDate.text = SimpleDateFormat("MMM yyyy", Locale.getDefault()).format(cal.time)
                 graph.setWeekMode()
+                syncGraphHint(graph)
             }
             "MONTHLY" -> {
                 title.text = "Monthly Spending"
                 btnDaily.text = "Monthly"
-                view?.findViewById<TextView>(R.id.tvGraphHint)?.text = "Click on any month graph to view weekly graph"
+                view?.findViewById<TextView>(R.id.tvGraphHint)?.text = "Tap on any month graph to view weekly graph"
                 updateMonthlyLabels(graph)
                 graph.setMonthMode()
+                syncGraphHint(graph)
                 btnDate.text = selectedYear.toString()
             }
         }
         animateGraph(graph)
+    }
+
+    /** Re-evaluate visibility when the mode changes, not only when a data load completes. */
+    private fun syncGraphHint(graph: DayBarGraphView) {
+        view?.findViewById<TextView>(R.id.tvGraphHint)?.visibility =
+            if (graph.hasDataForCurrentMode()) View.VISIBLE else View.GONE
     }
 
     private fun setupDatePicker(btn: Button, graph: DayBarGraphView) {
@@ -382,13 +391,13 @@ class HistoryFragment : Fragment() {
                 }
             } else if (currentMode == "WEEKLY") {
                 // Show Month Picker (Jan - Dec)
-                val months = listOf("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
+                val months = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
                 val displayList = months.map { "$it $selectedYear" }
                 DropdownHelper.showBlinkingDropdown(requireContext(), btn, displayList, 200) { position, _ ->
                     selectedMonth = position
                     selectedWeek = 0
                     val cal = Calendar.getInstance().apply { set(selectedYear, selectedMonth, 1) }
-                    btn.text = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(cal.time)
+                    btn.text = SimpleDateFormat("MMM yyyy", Locale.getDefault()).format(cal.time)
                     loadGraphValues(graph)
                     animateGraph(graph)
                 }
@@ -398,7 +407,7 @@ class HistoryFragment : Fragment() {
                     selectedWeek = Calendar.getInstance().apply { firstDayOfWeek = Calendar.MONDAY; minimalDaysInFirstWeek = 1; set(y, m, d) }.get(Calendar.WEEK_OF_MONTH) - 1
                     
                     val cp = Calendar.getInstance().apply { set(y, m, d) }
-                    btn.text = SimpleDateFormat("MMMM d, yyyy", Locale.getDefault()).format(cp.time)
+                    btn.text = SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(cp.time)
                     forcedHighlightDay = (cp.get(Calendar.DAY_OF_WEEK) + 5) % 7
                     
                     loadGraphValues(graph); animateGraph(graph)
@@ -447,5 +456,5 @@ class HistoryFragment : Fragment() {
         graph.animate().alpha(1f).scaleX(1f).scaleY(1f).duration = 250
     }
 
-    private fun getTodayDate(): String = SimpleDateFormat("MMMM d, yyyy", Locale.getDefault()).format(Calendar.getInstance().time)
+    private fun getTodayDate(): String = SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Calendar.getInstance().time)
 }

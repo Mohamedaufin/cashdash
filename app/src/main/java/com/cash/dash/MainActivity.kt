@@ -150,7 +150,11 @@ class MainActivity : ThemedActivity() {
         }
 
         density = resources.displayMetrics.density
-        iconHeightPx = 84 * density
+        // Read the icon height rather than hardcoding it. This was `84 * density`,
+        // matching the old fixed 84dp icons; now that the height comes from a
+        // screen-size bucket, a stale 84 pulled the label up by more than the icon's
+        // own height and dropped it on top of the glyph.
+        iconHeightPx = resources.getDimension(R.dimen.nav_icon_height)
 
         colorActive = ThemeHelper.resolveColorAttr(this, R.attr.navActiveColor)
         colorInactive = ThemeHelper.resolveColorAttr(this, R.attr.navInactiveColor)

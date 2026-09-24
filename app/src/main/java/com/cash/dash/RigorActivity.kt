@@ -24,6 +24,7 @@ class RigorActivity : ThemedActivity() {
 
     private var enteredAmount = 0
     private var selectedExpenseDate: Long = -1L
+    private var sharedImageNeedsDate = false
     private lateinit var inputTitle: EditText
     private var isPage2 = false
 
@@ -48,6 +49,28 @@ class RigorActivity : ThemedActivity() {
         val inputAmount = findViewById<EditText>(R.id.inputAmount)
         val btnNext = findViewById<Button>(R.id.btnNext)
 
+        intent.getStringExtra(ShareImageActivity.EXTRA_SCAN_STATUS)?.let {
+            findViewById<TextView>(R.id.tvDescription).text = it
+        }
+
+        // A shared payment screenshot arrives through ShareImageActivity after its
+        // on-device OCR pass. Keep the normal manual-entry flow unchanged when no
+        // share extras are present.
+        intent.getStringExtra(ShareImageActivity.EXTRA_TITLE)?.takeIf { it.isNotBlank() }?.let {
+            inputTitle.setText(it)
+        }
+        intent.getIntExtra(ShareImageActivity.EXTRA_AMOUNT, 0).takeIf { it > 0 }?.let {
+            inputAmount.setText(it.toString())
+        }
+        intent.getLongExtra(ShareImageActivity.EXTRA_DATE, -1L).takeIf { it > 0 }?.let {
+            selectedExpenseDate = it
+            findViewById<android.widget.CalendarView>(R.id.calendarExpense).date = it
+        }
+        sharedImageNeedsDate = intent.getBooleanExtra(ShareImageActivity.EXTRA_SHARED_IMAGE, false) && selectedExpenseDate < 0
+        if (sharedImageNeedsDate) {
+            findViewById<TextView>(R.id.txtDateLabel).text = "Select payment date (not found in screenshot)"
+        }
+
         categoryList = findViewById(R.id.categoryListContainer)
 
         showPage1()
@@ -59,6 +82,8 @@ class RigorActivity : ThemedActivity() {
             val cal = Calendar.getInstance()
             cal.set(year, month, day)
             selectedExpenseDate = cal.timeInMillis
+            sharedImageNeedsDate = false
+            findViewById<TextView>(R.id.txtDateLabel).text = "Payment date"
         }
 
         btnNext.setOnClickListener {
@@ -81,6 +106,10 @@ class RigorActivity : ThemedActivity() {
                 return@setOnClickListener
             }
 
+            if (sharedImageNeedsDate) {
+                ToastHelper.showToast(this, "Select the payment date")
+                return@setOnClickListener
+            }
             if (selectedExpenseDate == -1L)
                 selectedExpenseDate = Calendar.getInstance().timeInMillis
 

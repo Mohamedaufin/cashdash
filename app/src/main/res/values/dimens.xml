@@ -6,6 +6,9 @@
     <dimen name="text_subhead">16sp</dimen>  
     <dimen name="text_body">14sp</dimen>     
     <dimen name="text_caption">12sp</dimen>
+    <dimen name="text_action">15sp</dimen>
+    <dimen name="text_small">11sp</dimen>
+    <dimen name="text_micro">10sp</dimen>
 
     <!-- Locked Typography for Graphs (Fixed size, ignores system font scaling) -->
     <dimen name="graph_text_title">18dp</dimen>
@@ -42,4 +45,18 @@
       buttons — which made destructive actions the hardest things on screen to hit.
     -->
     <dimen name="touch_target_min">48dp</dimen>
+
+    <!--
+      Top bar and bottom nav only. These are the two blocks that squeeze the content
+      when a screen is short, so they are the only things that shrink; values-h700dp
+      holds the original sizes and this file is the reduced set for shorter screens.
+    -->
+    <dimen name="top_menu_size">26dp</dimen>
+    <dimen name="top_icon_size">30dp</dimen>
+    <dimen name="top_greeting_text">14sp</dimen>
+    <dimen name="nav_icon_width">120dp</dimen>
+    <dimen name="nav_icon_height">60dp</dimen>
+    <!-- All normal UI text uses sp so accessibility font scaling remains reliable. -->
+    <dimen name="text_hint">12sp</dimen>
+    <dimen name="wallet_ring_margin_top">48dp</dimen>
 </resources>

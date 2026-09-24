@@ -60,7 +60,7 @@
                 android:layout_height="wrap_content"
                 android:text="Upload from gallery"
                 android:textColor="#FFFFFF"
-                android:textSize="14sp"
+                android:textSize="@dimen/text_action"
                 android:textStyle="bold"/>
 
         </LinearLayout>

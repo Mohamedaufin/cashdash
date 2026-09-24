@@ -136,7 +136,7 @@ class AllocatorActivity : ThemedActivity() {
         val input = EditText(this).apply {
             hint = "Enter category name (Eg: Food)"
             inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
-            setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15f)
+            setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, context.resources.getDimension(R.dimen.text_action))
             setHintTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
             setTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
             background = androidx.core.content.ContextCompat.getDrawable(context, com.cash.dash.ThemeHelper.getDrawable(context, R.drawable.bg_glass_input))
@@ -233,22 +233,21 @@ class AllocatorActivity : ThemedActivity() {
         val limitPrefs = getSharedPreferences("CategoryPrefs", Context.MODE_PRIVATE)
         limitPrefs.edit().remove("LIMIT_$name").apply()
 
-        // 🔥 THOROUGH CLEANUP: Reset SPENT and Weekly data for this category
-        val graphPrefs = getSharedPreferences("GraphData", Context.MODE_PRIVATE)
-        graphPrefs.edit().remove("SPENT_$name").apply()
-
-        val weekPrefs = getSharedPreferences("CategoryWeekData", Context.MODE_PRIVATE)
-        val weekEditor = weekPrefs.edit()
-        for (w in 1..5) {
-            weekEditor.remove("${name}_W$w")
-        }
-        weekEditor.apply()
-        
         val catPrefs = getSharedPreferences("CategoryPrefs", Context.MODE_PRIVATE)
         catPrefs.edit()
             .remove(CategoryIconHelper.KEY_PREFIX + name)
             .remove(CategoryIconHelper.KEY_LEGACY_PREFIX + name)
             .apply()
+
+        // This screen used to clear SPENT_ and the weekly keys by hand and stop there,
+        // leaving the expenses themselves behind pointing at a category that no longer
+        // existed. They then vanished from every breakdown — `categories.indexOf` returns
+        // -1 and the value is dropped — while still counting against the wallet.
+        //
+        // The Allocator exists twice (here, reached from History, and as the bottom-nav
+        // fragment) and the two deletes disagreed about what "delete" meant. Both now go
+        // through the same path, which also returns the money to the wallet.
+        HistoryDataManager.deleteCategory(this, name)
 
         // Sync deletion to cloud
         FirestoreSyncManager.pushAllDataToCloud(this)
@@ -308,7 +307,7 @@ class AllocatorActivity : ThemedActivity() {
             val hint1 = TextView(this).apply {
                 text = "Tap on any allocator to view detailed insights"
                 setTextColor(com.cash.dash.ThemeHelper.resolveColorAttr(context, R.attr.textMutedColor))
-                setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 12f)
+                setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.text_hint))
                 gravity = android.view.Gravity.CENTER
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
@@ -320,7 +319,7 @@ class AllocatorActivity : ThemedActivity() {
             val hint2 = TextView(this).apply {
                 text = "Press and hold on any allocator to edit it"
                 setTextColor(com.cash.dash.ThemeHelper.resolveColorAttr(context, R.attr.textMutedColor))
-                setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 12f)
+                setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.text_hint))
                 gravity = android.view.Gravity.CENTER
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
@@ -502,6 +501,18 @@ class AllocatorActivity : ThemedActivity() {
             setPadding(0, 0, 0, (16 * density).toInt())
         }
         box.addView(titleView)
+
+        // This dialog had a title and two buttons and nothing else — it deleted a
+        // category and everything filed under it with no warning at all.
+        val messageView = TextView(this).apply {
+            text = HistoryDataManager.describeCategoryDeletion(this@AllocatorActivity, name)
+            setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.text_body))
+            setTextColor(ThemeHelper.resolveColorAttr(this@AllocatorActivity, R.attr.textPrimaryColor))
+            gravity = android.view.Gravity.CENTER
+            setPadding(0, 0, 0, (32 * density).toInt())
+            setLineSpacing(8f, 1f)
+        }
+        box.addView(messageView)
 
         val buttonContainer = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL

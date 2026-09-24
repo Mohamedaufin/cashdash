@@ -100,6 +100,8 @@
          and the Rigor tracker already phrase it, so the same figure is never worded two
          different ways in two places. -->
     <string name="allocator_no_limit">No limit set</string>
+    <string name="allocator_set_limit">Set Limit</string>
+    <string name="allocator_edit_limit">Edit Limit</string>
     <string name="allocator_spent_with_left">₹%1$d of ₹%2$d · ₹%3$d left</string>
     <string name="allocator_spent_with_over">₹%1$d of ₹%2$d · ₹%3$d over</string>
 </resources>

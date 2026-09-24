@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Original sizes, used whenever there is 700dp or more of height. -->
+    <dimen name="top_menu_size">32dp</dimen>
+    <dimen name="top_icon_size">36dp</dimen>
+    <dimen name="top_greeting_text">16.2dp</dimen>
+    <dimen name="nav_icon_width">166dp</dimen>
+    <dimen name="nav_icon_height">84dp</dimen>
+    <dimen name="wallet_ring_margin_top">32dp</dimen>
+</resources>

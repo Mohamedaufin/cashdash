@@ -100,6 +100,13 @@ dependencies {
     implementation("androidx.camera:camera-view:1.4.1")
 
     implementation("com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0")
+    // Bundled so the first shared screenshot works offline without waiting for a
+    // Google Play services model download.
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+    // Second recogniser, used only on the cropped amount. The Latin model reads the ₹
+    // sign as a 7 or a Z at receipt sizes; ₹ belongs to the Indian script block, so the
+    // Devanagari model is trained on it. Both run on-device, so nothing is uploaded.
+    implementation("com.google.mlkit:text-recognition-devanagari:16.0.1")
     implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
 
     // Google Sign-In. Credential Manager is the supported path -- the GoogleSignInClient

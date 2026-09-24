@@ -166,7 +166,7 @@
             android:layout_marginEnd="8dp"
             android:text=""
             android:textColor="?attr/textMutedColor"
-            android:textSize="11sp"
+            android:textSize="@dimen/text_small"
             android:gravity="center" />
 
         <TextView
@@ -177,7 +177,7 @@
             android:layout_marginStart="8dp"
             android:text=""
             android:textColor="?attr/textMutedColor"
-            android:textSize="11sp"
+            android:textSize="@dimen/text_small"
             android:gravity="center" />
     </LinearLayout>
 

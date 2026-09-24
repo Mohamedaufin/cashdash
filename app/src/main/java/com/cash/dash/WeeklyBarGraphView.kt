@@ -122,11 +122,8 @@ class WeeklyBarGraphView(context: Context, attrs: AttributeSet?) : View(context,
             if (value == 0f) {
                 val label = if (i < weekLabels.size) weekLabels[i] else "W${i+1}"
                 
-                textPaint.textSize = unifiedAmountSize
-                textPaint.typeface = Typeface.DEFAULT
-                textPaint.color = ThemeHelper.resolveColorAttr(context, R.attr.textMutedColor)
-                canvas.drawText("₹0", center, bottom - 30f, textPaint)
-                
+                // Matches DayBarGraphView: an empty column's date says "nothing here"
+                // on its own, and repeated "₹0" labels read as data rather than absence.
                 textPaint.typeface = Typeface.DEFAULT
                 val labelStr = if (i < weekLabels.size) weekLabels[i] else "W${i+1}"
                 

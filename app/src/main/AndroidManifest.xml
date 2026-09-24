@@ -117,6 +117,19 @@
         <activity android:configChanges="uiMode" android:name=".MoneyScheduleActivity"  android:exported="false" />
         <activity android:configChanges="uiMode" android:name=".HistoryActivity"  android:exported="false" />
         <activity android:configChanges="uiMode" android:name=".RigorActivity"  android:exported="false" />
+        <activity
+            android:name=".ShareImageActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Cashdash"
+            android:grantUriPermissions="true">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+        </activity>
         <activity android:configChanges="uiMode" android:name=".CategoryAnalysisActivity"  android:exported="false" />
         <activity android:configChanges="uiMode" android:name=".SearchActivity"  android:exported="false" />
         <activity android:configChanges="uiMode" android:name=".DetailHistoryActivity"  android:exported="false" />

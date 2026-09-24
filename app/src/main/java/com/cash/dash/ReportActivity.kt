@@ -312,7 +312,7 @@ class ReportActivity : ThemedActivity() {
             // here disappeared against the light drawable on the White theme.
             setTextColor(ThemeHelper.resolveColorAttr(this@ReportActivity, R.attr.textPrimaryColor))
             setBackgroundColor(Color.TRANSPARENT)
-            setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15f)
+            setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.text_action))
             setTypeface(null, android.graphics.Typeface.BOLD)
             setOnClickListener {
                 dialog.dismiss()
@@ -383,7 +383,7 @@ class ReportActivity : ThemedActivity() {
                     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                         val view = super.getView(position, convertView, parent) as TextView
                         view.setTextColor(ThemeHelper.resolveColorAttr(this@ReportActivity, R.attr.textPrimaryColor))
-                        view.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15f)
+                        view.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.text_action))
                         view.setPadding(
                             (12 * resources.displayMetrics.density).toInt(),
                             (14 * resources.displayMetrics.density).toInt(),
@@ -562,7 +562,7 @@ class ReportActivity : ThemedActivity() {
         val tvHeader = TextView(this).apply {
             text = "TOTAL SPENT: ₹${insights.totalSpent.toInt()}  |  ${insights.periodLabel}"
             setTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textMutedColor))
-            textSize = 10f
+            setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.text_micro))
             letterSpacing = 0.1f
             typeface = Typeface.DEFAULT_BOLD
             gravity = android.view.Gravity.CENTER
@@ -579,7 +579,7 @@ class ReportActivity : ThemedActivity() {
             val emptyLine = TextView(this).apply {
                 text = "No spending recorded in this period"
                 setTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
-                textSize = 15f
+                setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.text_action))
                 typeface = Typeface.DEFAULT_BOLD
                 gravity = android.view.Gravity.CENTER
                 setPadding(0, (26 * dp).toInt(), 0, (6 * dp).toInt())
@@ -591,7 +591,7 @@ class ReportActivity : ThemedActivity() {
                     "Record an expense to see your breakdown here."
                 }
                 setTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textMutedColor))
-                textSize = 12f
+                setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.text_caption))
                 gravity = android.view.Gravity.CENTER
                 setPadding((24 * dp).toInt(), 0, (24 * dp).toInt(), (26 * dp).toInt())
             }
@@ -669,7 +669,7 @@ class ReportActivity : ThemedActivity() {
                 val displayCatName = if (summary.category.equals("no choice", ignoreCase = true)) "No Allocation" else summary.category
                 text = displayCatName.uppercase()
                 setTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
-                textSize = 13f
+                setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.text_body))
                 setPadding((10 * dp).toInt(), 0, 0, 0)
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             }
@@ -678,7 +678,7 @@ class ReportActivity : ThemedActivity() {
             val statsTv = TextView(this).apply {
                 text = "₹${summary.amount.toInt()}  •  ${summary.percentage.toInt()}%"
                 setTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
-                textSize = 13f
+                setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.text_body))
                 typeface = Typeface.DEFAULT_BOLD
                 gravity = android.view.Gravity.END
             }
@@ -769,13 +769,13 @@ class ReportActivity : ThemedActivity() {
         val labelTv = TextView(context).apply {
             text = label
             setTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textMutedColor))
-            textSize = 14f
+            setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.text_body))
             layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
         }
         val valTv = TextView(context).apply {
             text = value
             setTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
-            textSize = 14f
+            setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.text_body))
             typeface = Typeface.DEFAULT_BOLD
             gravity = android.view.Gravity.END
         }
@@ -787,7 +787,7 @@ class ReportActivity : ThemedActivity() {
             val subTv = TextView(context).apply {
                 text = sub
                 setTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textMutedColor))
-                textSize = 12f
+                setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.text_caption))
                 setPadding(0, 0, 0, 8)
             }
             addView(subTv)
@@ -798,7 +798,7 @@ class ReportActivity : ThemedActivity() {
         val tv = TextView(context).apply {
             this.text = "• $text"
             setTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
-            textSize = 14f
+            setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.text_body))
             setPadding(0, 8, 0, 8)
             setLineSpacing(0f, 1.2f)
         }

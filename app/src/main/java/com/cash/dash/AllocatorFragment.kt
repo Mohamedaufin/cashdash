@@ -80,7 +80,7 @@ class AllocatorFragment : Fragment() {
             val hint1 = TextView(requireContext()).apply {
                 text = "Tap on any allocator to view detailed insights"
                 setTextColor(com.cash.dash.ThemeHelper.resolveColorAttr(requireContext(), R.attr.textMutedColor))
-                setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 12f)
+                setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.text_hint))
                 gravity = android.view.Gravity.CENTER
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
@@ -92,7 +92,7 @@ class AllocatorFragment : Fragment() {
             val hint2 = TextView(requireContext()).apply {
                 text = "Press and hold on any allocator to edit it"
                 setTextColor(com.cash.dash.ThemeHelper.resolveColorAttr(requireContext(), R.attr.textMutedColor))
-                setTextSize(android.util.TypedValue.COMPLEX_UNIT_DIP, 12f)
+                setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.text_hint))
                 gravity = android.view.Gravity.CENTER
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
@@ -167,7 +167,7 @@ class AllocatorFragment : Fragment() {
         val input = EditText(requireContext()).apply {
             hint = "Enter category name (Eg: Food)"
             inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
-            setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15f)
+            setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, context.resources.getDimension(R.dimen.text_action))
             setHintTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
             setTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
             background = androidx.core.content.ContextCompat.getDrawable(requireContext(), com.cash.dash.ThemeHelper.getDrawable(requireContext(), R.drawable.bg_glass_input))
@@ -366,7 +366,7 @@ class AllocatorFragment : Fragment() {
         val input = EditText(requireContext()).apply {
             setText(name)
             inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
-            setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 14f)
+            setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, context.resources.getDimension(R.dimen.text_body))
             setTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
             setHintTextColor(ThemeHelper.resolveColorAttr(context, R.attr.textPrimaryColor))
             background = androidx.core.content.ContextCompat.getDrawable(context, com.cash.dash.ThemeHelper.getDrawable(context, R.drawable.bg_glass_input))
@@ -460,7 +460,7 @@ class AllocatorFragment : Fragment() {
         box.addView(titleView)
 
         val messageView = TextView(requireContext()).apply {
-            text = "Deleting this allocation will also delete all associated expenses of $name. Continue?"
+            text = HistoryDataManager.describeCategoryDeletion(requireContext(), name)
             setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, requireContext().resources.getDimension(R.dimen.text_body))
             setTextColor(ThemeHelper.resolveColorAttr(requireContext(), R.attr.textPrimaryColor))
             gravity = android.view.Gravity.CENTER
