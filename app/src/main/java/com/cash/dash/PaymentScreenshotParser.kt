@@ -22,14 +22,18 @@ internal data class PaymentFields(
     val date: Long?,
     /** Box of the line the amount came from, so it can be re-read at higher zoom. */
     val amountBox: IntArray? = null,
-    /**
-     * True when the amount was read from a line carrying ₹/Rs/INR rather than a bare
-     * number. OCR misreads the ₹ glyph as a 7 often enough that "₹1" comes back as the
-     * bare number 71, so a caller comparing two passes needs to know which one actually
-     * saw a currency symbol.
-     */
-    val amountFromCurrency: Boolean = false
+    /** Evidence used to rank and reconcile amount reads from multiple OCR passes. */
+    val amountEvidence: AmountEvidence? = null
 )
+
+internal enum class AmountEvidence {
+    CURRENCY,
+    PAYMENT_LABEL,
+    GLYPH,
+    BARE;
+
+    val isReliable: Boolean get() = this != BARE
+}
 
 /** Conservative receipt extraction: uncertain fields are left for the user to enter. */
 internal object PaymentScreenshotParser {
@@ -53,6 +57,10 @@ internal object PaymentScreenshotParser {
     private val detailWords = Regex("(?i)\\b(transaction\\s*i[dl]|reference|ref\\s*(?:no|i[dl])|bank\\s+(?:name|a/?c|account|ref)|a/?c\\s*(?:no|number)|account\\s*(?:no|number|name|details)|paid\\s+(?:to|from)\\s+upi\\s*i[dl])\\b")
     private val statusWords = Regex("(?i)\\b(pay\\s+again|successful|success|completed|complete|debited)\\b")
     private val currencyAmount = Regex("(?i)(?:₹|rs\\.?|inr)\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)")
+    // Some OCR passes remove both the ₹ and the following space: "Paid ₹7,800"
+    // becomes "Paid7,800". The payment verb is still strong evidence that the number
+    // on this line is the headline amount.
+    private val paymentLabelAmount = Regex("(?i)(?:^|\\s)(?:paid|sent|debited|received|amount|total)\\s*(?:₹|rs\\.?|inr)?\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)\\b")
     private val bareAmount = Regex("(?i)^(?:₹|rs\\.?|inr|r)?\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)$")
 
     /**
@@ -68,8 +76,8 @@ internal object PaymentScreenshotParser {
     private val explicitPayee = Regex("(?i)^(?:(?:paid|sent|transferred)\\s+)?to\\s*[:\\-]?\\s*(.+)$")
 
     // Money in is a transaction worth recording too, and there the other party sits
-    // behind "Received from" rather than "To".
-    private val receivedFrom = Regex("(?i)^received\\s+from\\s*[:\\-]?\\s*(.+)$")
+    // behind "From" or "Received from" rather than "To".
+    private val receivedFrom = Regex("(?i)^(?:received\\s+)?from\\s*[:\\-]?\\s*(.+)$")
     // BHIM puts the payee under "Banking Name", far below the amount, so without this
     // the only name-shaped text left was the app's own header banner.
     private val payeeLabelOnly = Regex("(?i)^(?:(?:paid|sent|transferred)\\s+)?to\\s*[:\\-]?$|^received\\s+from\\s*[:\\-]?$|^(?:banking|payee|merchant|beneficiary)\\s+name\\s*[:\\-]?$")
@@ -124,7 +132,7 @@ internal object PaymentScreenshotParser {
      *   and date are read out of the image.
      */
     fun parse(rawLines: List<ReceiptLine>, imageHeight: Int, merchantApp: String? = null): PaymentFields {
-        val lines = rawLines.map { it.copy(text = it.text.replace(Regex("\\s+"), " ").trim()) }
+        val lines = rawLines.map { it.copy(text = normalizeText(it.text)) }
             .filter { it.text.isNotEmpty() }
             .sortedWith(compareBy<ReceiptLine> { it.top }.thenBy { it.left })
         val allText = lines.joinToString(" ") { it.text }
@@ -164,9 +172,9 @@ internal object PaymentScreenshotParser {
         // The receipt's own payee wins over the app it came from: a Razorpay page
         // inside Zomato names "ZOMATO LTD", which is better than the bare app name.
         // The app is the fallback for order pages that name nobody at all.
-        val title = findTitle(lines, detailIndex, amountMatch?.top)
+        val title = (findTitle(lines, detailIndex, amountMatch?.top)
             ?: findTitle(lines, lines.size, amountMatch?.top)
-            ?: merchantApp
+            ?: merchantApp)?.let { preferBestSpacedDuplicate(it, lines) }
         // Prefer the receipt's main payment date over secondary dates in bank
         // details, references or a surrounding gallery UI.
         val date = if (merchantApp != null) findDate(lines, imageHeight)
@@ -174,10 +182,10 @@ internal object PaymentScreenshotParser {
                 ?: findDate(lines.drop(detailIndex), imageHeight)
         return PaymentFields(true, title, amountMatch?.value, date,
             amountMatch?.let { intArrayOf(it.left, it.top, it.width, it.height) },
-            amountMatch?.fromCurrency == true)
+            amountMatch?.evidence)
     }
 
-    data class AmountMatch(val value: Int, val fromCurrency: Boolean, val top: Int, val left: Int = 0, val width: Int = 0, val height: Int = 0)
+    data class AmountMatch(val value: Int, val evidence: AmountEvidence, val top: Int, val left: Int = 0, val width: Int = 0, val height: Int = 0)
 
     /**
      * Reads the amount out of a crop the caller has already located as the headline figure.
@@ -190,7 +198,7 @@ internal object PaymentScreenshotParser {
      * screenshot is a receipt; the crop only has to be read.
      */
     fun amountInCrop(rawLines: List<ReceiptLine>): AmountMatch? {
-        val lines = rawLines.map { it.copy(text = it.text.replace(Regex("\\s+"), " ").trim()) }
+        val lines = rawLines.map { it.copy(text = normalizeText(it.text)) }
             .filter { it.text.isNotEmpty() }
         // imageHeight 0: the crop is the amount, so there is no status bar to skip.
         return findAmount(lines, 0)
@@ -203,44 +211,36 @@ internal object PaymentScreenshotParser {
             if (imageHeight > 0 && line.top < imageHeight / 20) return@mapNotNull null
             val currency = currencyAmount.find(line.text)
             val glyph = if (currency == null) glyphPrefixedAmount.matchEntire(line.text) else null
+            val labelled = if (currency == null && glyph == null) paymentLabelAmount.find(line.text) else null
             val number = (currency?.groupValues?.get(1)
                 ?: glyph?.groupValues?.get(1)
+                ?: labelled?.groupValues?.get(1)
                 ?: bareAmount.matchEntire(line.text)?.groupValues?.get(1))
                 ?.replace(",", "")?.toDoubleOrNull() ?: return@mapNotNull null
             if (number <= 0 || number > 10_000_000) return@mapNotNull null
-            val marked = currency != null || glyph != null
-            val score = (if (marked) 200 else 0) + line.height.coerceAtMost(150)
-            score to AmountMatch(number.toInt(), marked, line.top, line.left, line.width, line.height)
+            val evidence = when {
+                currency != null -> AmountEvidence.CURRENCY
+                labelled != null -> AmountEvidence.PAYMENT_LABEL
+                glyph != null -> AmountEvidence.GLYPH
+                else -> AmountEvidence.BARE
+            }
+            val evidenceScore = when (evidence) {
+                AmountEvidence.CURRENCY -> 400
+                AmountEvidence.PAYMENT_LABEL -> 350
+                AmountEvidence.GLYPH -> 300
+                AmountEvidence.BARE -> 0
+            }
+            val score = evidenceScore + line.height.coerceAtMost(150)
+            score to AmountMatch(number.toInt(), evidence, line.top, line.left, line.width, line.height)
         }
-        // A currency-marked amount always beats a bare number, however large the bare
-        // one renders: the headline figure on a receipt is exactly where the ₹ is most
-        // likely to be misread, so height alone is not evidence.
-        val withCurrency = candidates.filter { it.second.fromCurrency }
-        if (withCurrency.isNotEmpty()) return withCurrency.maxByOrNull { it.first }?.second
-
-        val best = candidates.maxByOrNull { it.first }?.second ?: return null
-
-        // No ₹ was recognised anywhere, yet a receipt always renders one beside its
-        // headline figure. So a leading 7 on that figure is the symbol, not a digit:
-        // ₹1 read as 71, ₹187 as 7187, ₹20 as 720. Where the glyph is merely dropped no
-        // stray 7 appears at all, so this only fires on the misreading.
-        //
-        // The cost is a genuine ₹750 becoming 50. That is the trade: a leading 7 turns
-        // up in roughly one amount in seventeen, while this misreading hit three of the
-        // eight receipts tested — and the amount stays editable either way.
-        //
-        // fromCurrency stays false because this is a guess, not a recognised symbol.
-        // Claiming otherwise made the caller treat the receipt as fully read and skip the
-        // zoomed re-read — the one pass that can actually see the glyph and overrule a
-        // wrong guess. Left false, ₹750 misread as 7750 is stripped to 50 here and then
-        // corrected back to 750 when the crop resolves it.
-        val digits = best.value.toString()
-        if (digits.length >= 2 && digits.startsWith("7")) {
-            val stripped = digits.drop(1).toIntOrNull()
-            if (stripped != null && stripped > 0) return best.copy(value = stripped)
-        }
-        return best
+        return candidates.maxByOrNull { it.first }?.second
     }
+
+    private fun normalizeText(raw: String): String = raw.trim()
+        .replace(Regex("(?i)(^|\\s)(paid|sent|debited|received)(?=\\d)")) {
+            "${it.groupValues[1]}${it.groupValues[2]} "
+        }
+        .replace(Regex("\\s+"), " ")
 
     private fun findTitle(lines: List<ReceiptLine>, detailIndex: Int, amountTop: Int?): String? {
         val header = lines.take(detailIndex)
@@ -346,10 +346,36 @@ internal object PaymentScreenshotParser {
 
     private fun cleanName(raw: String): String? {
         val name = raw.trim().trim(':', '-', ' ').replace(Regex("\\s+"), " ")
+            .replace(Regex("(?i)^(?:received\\s+)?from\\s*[:\\-]?\\s+"), "")
         if (name.length !in 2..60 || name.any { it.isDigit() || it == '@' }) return null
         if (!name.any(Char::isLetter) || isGenericName(name)) return null
         if (!name.all { it.isLetter() || it.isWhitespace() || it in ".'-&" }) return null
         return name
+    }
+
+    /**
+     * Reconciles duplicate OCR readings of the same counterparty without knowing any
+     * person's name. A header may read `SAMPLE PERSON XY`, while a details row preserves
+     * the printed initials as `SAMPLE PERSON X Y`. Their letters are identical; the
+     * version with clearer token boundaries is the better transcription.
+     */
+    private fun preferBestSpacedDuplicate(title: String, lines: List<ReceiptLine>): String {
+        fun identity(value: String): String = value.lowercase(Locale.ENGLISH)
+            .filter(Char::isLetter)
+        val wanted = identity(title)
+        val candidates = buildList {
+            add(title)
+            for (line in lines) {
+                val raw = explicitPayee.matchEntire(line.text)?.groupValues?.get(1)
+                    ?: receivedFrom.matchEntire(line.text)?.groupValues?.get(1)
+                    ?: continue
+                cleanName(raw)?.takeIf { identity(it) == wanted }?.let(::add)
+            }
+        }
+        return candidates.maxWithOrNull(
+            compareBy<String> { it.split(' ').count(String::isNotBlank) }
+                .thenBy { it.length }
+        ) ?: title
     }
 
     private fun findDate(lines: List<ReceiptLine>, imageHeight: Int): Long? {

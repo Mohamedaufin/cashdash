@@ -17,11 +17,12 @@ import android.widget.TextView
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.devanagari.DevanagariTextRecognizerOptions
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 
 /** Share-sheet entry point. The image is read locally and is never uploaded or stored. */
 class ShareImageActivity : ThemedActivity() {
+    private data class AmountCrop(val bitmap: Bitmap, val visuallyCorrectedAmount: Int?)
+
     companion object {
         const val EXTRA_TITLE = "shared_payment_title"
         const val EXTRA_AMOUNT = "shared_payment_amount"
@@ -71,10 +72,10 @@ class ShareImageActivity : ThemedActivity() {
             } else null
             if (BuildConfig.DEBUG && resolvedApp != merchantApp) Log.d(TAG, "app from text=$resolvedApp")
             val primary = PaymentScreenshotParser.parse(primaryText.receiptLines(), image.height, resolvedApp)
-            // A bare number is not good enough to skip the enhanced pass. "₹1" comes
-            // back as "71" when the glyph is misread, and that reads as a complete
-            // result — so the retry that could have recovered the ₹ never ran.
-            if (primary.title != null && primary.amountFromCurrency && primary.date != null) {
+            // A bare number is not good enough to skip the enhanced pass. Currency text,
+            // a payment label ("Paid 7,800"), or a recognised currency glyph provides
+            // enough context to trust the headline amount.
+            if (primary.title != null && primary.amountEvidence?.isReliable == true && primary.date != null) {
                 recognizer.close()
                 openRigor(primary)
                 return@addOnSuccessListener
@@ -93,15 +94,20 @@ class ShareImageActivity : ThemedActivity() {
                 .addOnSuccessListener { secondaryText ->
                     val secondary = PaymentScreenshotParser.parse(secondaryText.receiptLines(), enhanced.height, resolvedApp)
                     logLines("enhanced", secondaryText.receiptLines())
-                    // Taking `primary.amount ?: secondary.amount` meant a bare number
-                    // from the first pass outranked a properly currency-marked amount
-                    // from the enhanced one. "₹1" read as "71" therefore survived even
-                    // when the second pass got it right.
-                    val amountFromCurrency = primary.amountFromCurrency || secondary.amountFromCurrency
+                    // Prefer contextual evidence over a visually prominent bare number.
+                    // This lets "Paid7,800" win while an isolated "71" still gets the
+                    // crop-and-zoom recovery pass for a possibly misread ₹1.
+                    val primaryReliable = primary.amountEvidence?.isReliable == true
+                    val secondaryReliable = secondary.amountEvidence?.isReliable == true
                     val amount = when {
-                        primary.amountFromCurrency -> primary.amount
-                        secondary.amountFromCurrency -> secondary.amount
+                        primaryReliable -> primary.amount
+                        secondaryReliable -> secondary.amount
                         else -> primary.amount ?: secondary.amount
+                    }
+                    val evidence = when {
+                        primaryReliable -> primary.amountEvidence
+                        secondaryReliable -> secondary.amountEvidence
+                        else -> primary.amountEvidence ?: secondary.amountEvidence
                     }
                     val merged = PaymentFields(
                         primary.isPayment || secondary.isPayment,
@@ -109,16 +115,24 @@ class ShareImageActivity : ThemedActivity() {
                         amount,
                         primary.date ?: secondary.date,
                         primary.amountBox ?: secondary.amountBox,
-                        amountFromCurrency
+                        evidence
                     )
-                    if (merged.amountFromCurrency || merged.amountBox == null) {
+                    if (merged.amountEvidence?.isReliable == true) {
                         openRigor(merged)
-                    } else {
+                    } else if (merged.amountBox != null) {
                         // Neither full-image pass saw a ₹. The glyph is small relative to
                         // the whole screenshot, which is exactly when it gets dropped or
                         // read as a 7 — so re-read only that line, enlarged.
                         zoomedAmount(uri, merged.amountBox, merged.amount) { zoomed ->
-                            openRigor(if (zoomed == null) merged else merged.copy(amount = zoomed, amountFromCurrency = true))
+                            openRigor(if (zoomed == null) merged else merged.copy(amount = zoomed, amountEvidence = AmountEvidence.CURRENCY))
+                        }
+                    } else {
+                        // Some large display fonts disappear as a whole line — there is
+                        // then no box for the normal zoom path. Re-scan the receipt header
+                        // independently and accept only a currency-shaped or headline-
+                        // sized number.
+                        recoverMissingAmount(uri) { recovered ->
+                            openRigor(if (recovered == null) merged else merged.copy(amount = recovered, amountEvidence = AmountEvidence.CURRENCY))
                         }
                     }
                 }
@@ -192,13 +206,17 @@ class ShareImageActivity : ThemedActivity() {
         fullImageAmount: Int?,
         onDone: (Int?) -> Unit
     ) {
-        val crop = try { croppedRegion(uri, box) } catch (error: Exception) {
+        val cropResult = try { croppedRegion(uri, box, fullImageAmount) } catch (error: Exception) {
             Log.w(TAG, "Amount crop unavailable", error)
             null
         }
-        if (crop == null) {
+        if (cropResult == null) {
             onDone(null)
             return
+        }
+        val crop = cropResult.bitmap
+        if (BuildConfig.DEBUG && cropResult.visuallyCorrectedAmount != null) {
+            Log.d(TAG, "visual ₹ correction: $fullImageAmount -> ${cropResult.visuallyCorrectedAmount}")
         }
         // Two reads of the crop: as-is, then contrast-boosted. On the Jupiter receipt
         // the plain crop agreed with the full image that "₹20" was "720", leaving
@@ -209,36 +227,28 @@ class ShareImageActivity : ThemedActivity() {
             null
         }
         val bitmaps = listOfNotNull(crop, contrasted)
-        val latin = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-        // The Latin model is what reads ₹ as a 7 or a Z. ₹ sits in the Indian script
-        // block, so the Devanagari model is actually trained on the glyph — it gets a
-        // turn on the same crops before any guesswork is applied.
-        val devanagari = TextRecognition.getClient(DevanagariTextRecognizerOptions.Builder().build())
-        val attempts = bitmaps.map { it to latin } + bitmaps.map { it to devanagari }
+        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
 
         fun finish(result: Int?) {
             bitmaps.forEach { if (!it.isRecycled) it.recycle() }
-            latin.close()
-            devanagari.close()
+            recognizer.close()
             onDone(result)
         }
 
         fun attempt(index: Int) {
-            if (index >= attempts.size) {
-                finish(null)
+            if (index >= bitmaps.size) {
+                finish(cropResult.visuallyCorrectedAmount)
                 return
             }
-            val (bitmap, recognizer) = attempts[index]
+            val bitmap = bitmaps[index]
             recognizer.process(InputImage.fromBitmap(bitmap, 0))
                 .addOnSuccessListener { text ->
-                    logLines("zoom#$index${if (recognizer === devanagari) " devanagari" else " latin"}", text.receiptLines())
-                    // Reads the crop directly instead of going through parse(), which
-                    // first demands the text look like a payment. One cropped line never
-                    // does, so every zoom result was being discarded — including the
-                    // Devanagari pass that had read "₹1" correctly.
+                    logLines("zoom#$index", text.receiptLines())
+                    // A crop contains no status text, so it bypasses the full receipt
+                    // gate and is evaluated directly as an amount line.
                     val zoomed = PaymentScreenshotParser.amountInCrop(text.receiptLines())
                     val usable = zoomed?.value
-                        ?.takeIf { zoomed.fromCurrency || droppedRupeeGlyph(fullImageAmount, it) }
+                        ?.takeIf { zoomed.evidence.isReliable || droppedRupeeGlyph(fullImageAmount, it) }
                     if (usable != null) finish(usable) else attempt(index + 1)
                 }
                 .addOnFailureListener { error ->
@@ -281,10 +291,11 @@ class ShareImageActivity : ThemedActivity() {
         return result
     }
 
-    private fun croppedRegion(uri: Uri, box: IntArray): Bitmap? {
+    private fun croppedRegion(uri: Uri, box: IntArray, ocrAmount: Int?): AmountCrop? {
         val source = contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) } ?: return null
         val (left, top, width, height) = listOf(box[0], box[1], box[2], box[3])
         if (width <= 0 || height <= 0) { source.recycle(); return null }
+        val visuallyCorrectedAmount = LeadingRupeeDetector.correctedAmount(source, box, ocrAmount)
         // Generous horizontal padding: the ₹ sits to the left of the digits and OCR's
         // line box often starts after it, which is part of why it goes missing.
         val padX = maxOf(width / 2, height * 2)
@@ -299,7 +310,70 @@ class ShareImageActivity : ThemedActivity() {
         val scale = (900f / maxOf(region.width, 1)).coerceIn(2f, 6f)
         val zoomed = Bitmap.createScaledBitmap(region, (region.width * scale).toInt(), (region.height * scale).toInt(), true)
         if (zoomed !== region) region.recycle()
-        return zoomed
+        return AmountCrop(zoomed, visuallyCorrectedAmount)
+    }
+
+    private fun recoverMissingAmount(uri: Uri, onDone: (Int?) -> Unit) {
+        val source = try {
+            contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
+        } catch (error: Exception) {
+            Log.w(TAG, "Header amount scan unavailable", error)
+            null
+        }
+        if (source == null) {
+            onDone(null)
+            return
+        }
+        val scans = try {
+            listOfNotNull(
+                MissingAmountRecovery.createFocusedAmountScan(source)?.let { "focus" to it },
+                MissingAmountRecovery.createHeaderScan(source)?.let { "header" to it }
+            )
+        } finally { source.recycle() }
+        if (scans.isEmpty()) {
+            onDone(null)
+            return
+        }
+        val variants = scans.flatMap { (name, scan) ->
+            listOfNotNull(
+                name to scan,
+                try { "$name contrast" to boostContrast(scan) } catch (error: Exception) {
+                    Log.w(TAG, "Header scan enhancement unavailable", error)
+                    null
+                },
+                try { "$name normalized" to MissingAmountRecovery.normalizeForOcr(scan) } catch (error: Exception) {
+                    Log.w(TAG, "Header scan normalization unavailable", error)
+                    null
+                }
+            )
+        }
+        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+
+        fun finish(value: Int?) {
+            variants.forEach { (_, bitmap) -> if (!bitmap.isRecycled) bitmap.recycle() }
+            recognizer.close()
+            onDone(value)
+        }
+
+        fun attempt(index: Int) {
+            if (index >= variants.size) {
+                finish(null)
+                return
+            }
+            val (name, bitmap) = variants[index]
+            recognizer.process(InputImage.fromBitmap(bitmap, 0))
+                .addOnSuccessListener { text ->
+                    val lines = text.receiptLines()
+                    logLines("amount $name", lines)
+                    val recovered = MissingAmountRecovery.resolve(bitmap, lines)
+                    if (recovered != null) finish(recovered) else attempt(index + 1)
+                }
+                .addOnFailureListener { error ->
+                    Log.w(TAG, "Header amount OCR unavailable", error)
+                    attempt(index + 1)
+                }
+        }
+        attempt(0)
     }
 
     private fun enhancedBitmap(uri: Uri): Bitmap? {
@@ -333,7 +407,7 @@ class ShareImageActivity : ThemedActivity() {
     private fun openRigor(fields: PaymentFields) {
         Log.i(TAG, "OCR finished: payment=${fields.isPayment}, title=${fields.title != null}, amount=${fields.amount != null}, date=${fields.date != null}")
         if (BuildConfig.DEBUG) {
-            Log.d(TAG, "parsed title=${fields.title} amount=${fields.amount} fromCurrency=${fields.amountFromCurrency}")
+            Log.d(TAG, "parsed title=${fields.title} amount=${fields.amount} evidence=${fields.amountEvidence}")
         }
         val status = when {
             !fields.isPayment -> "Could not confirm a successful payment. Check all details before saving."

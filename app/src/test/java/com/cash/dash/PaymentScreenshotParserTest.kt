@@ -127,4 +127,40 @@ class PaymentScreenshotParserTest {
         val expectedYear = java.time.LocalDate.now().year
         assertEquals("$expectedYear-09-20", dateOf(fields.date))
     }
+
+    @Test fun fusedPaidAmountKeepsRealLeadingSeven() {
+        // ML Kit returned exactly "Paid7,800" for this receipt: the ₹ and the space
+        // disappeared. A previous global heuristic then treated the real leading 7 as
+        // a malformed rupee glyph and would have converted ₹7,800 into ₹800.
+        val fields = PaymentScreenshotParser.parse(listOf(
+            line("10:12", 50),
+            line("Paid7,800", 490, 78),
+            line("To Mohamed Aufin A R", 696, 63),
+            line("28 May '25, 10:22 pm", 803, 46),
+            line("Notes: Payment from slice", 960),
+            line("UPI Ref ID", 2411),
+            line("514833942871", 2514)
+        ), 3088)
+        assertTrue(fields.isPayment)
+        assertEquals("Mohamed Aufin A R", fields.title)
+        assertEquals(7800, fields.amount)
+        assertEquals(AmountEvidence.PAYMENT_LABEL, fields.amountEvidence)
+        assertEquals("2025-05-28", dateOf(fields.date))
+    }
+
+    @Test fun incomingPaymentDropsFromLabelAndSeparatesTrailingInitials() {
+        val fields = PaymentScreenshotParser.parse(listOf(
+            line("From SAMPLE PERSON XY", 475, 28),
+            line("Paid via CRED", 790),
+            line("Completed", 905),
+            line("20 Sept 2026, 2:09 pm", 1019),
+            line("UPI transaction ID", 1390),
+            line("662927703431", 1453),
+            line("To: SAMPLE PERSON X Y", 1545),
+            line("From: SAMPLE PERSONXY", 1692)
+        ), 2560)
+        assertTrue(fields.isPayment)
+        assertEquals("SAMPLE PERSON X Y", fields.title)
+        assertEquals("2026-09-20", dateOf(fields.date))
+    }
 }
