@@ -131,6 +131,12 @@ class DetailHistoryActivity : ThemedActivity() {
                     tvEditHint?.visibility = View.VISIBLE
                 }
 
+                // Empty state: the breakdown above still renders (correctly empty), but the
+                // list area below would otherwise be a blank void with no explanation.
+                findViewById<View>(R.id.emptyStateContainer)?.visibility =
+                    if (sortedTransactions.isEmpty()) View.VISIBLE else View.GONE
+                recycler.visibility = if (sortedTransactions.isEmpty()) View.GONE else View.VISIBLE
+
                 val adapter = TransactionAdapter(
                     items = sortedTransactions,
                     showTimestamp = false,

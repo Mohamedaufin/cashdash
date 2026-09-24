@@ -81,7 +81,7 @@ object HistoryReportGenerator {
             "First observation for this ${durationDays}-day duration. Maintaining a daily average of ₹${current.dailyAverage.toInt()}."
         } else {
             val direction = if (totalDiff >= 0) "higher" else "lower"
-            "Your overall spending is ${kotlin.math.abs(totalPer).toInt()}% $direction compared to the previous $durationDays days."
+            "Your overall spending is ${kotlin.math.abs(totalPer).toInt()}% $direction compared to the previous ${if (durationDays == 1) "day" else "$durationDays days"}."
         }
         list.add(DeepAIInsight(trendTitle, trendContent, if (totalPer > 15) 1 else 0, InsightType.VELOCITY))
 

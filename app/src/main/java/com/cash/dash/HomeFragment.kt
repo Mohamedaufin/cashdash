@@ -842,7 +842,7 @@ class HomeFragment : Fragment() {
                     savePostponeTime(newPostponeUntil)
                     dialog?.dismiss()
                     val minutes = durationMs / (60 * 1000)
-                    ToastHelper.showCustomToast(context, "Rescheduled. Reminding in ${if (minutes >= 60) "${minutes / 60} hour(s)" else "$minutes minutes"}", 1200L)
+                    ToastHelper.showCustomToast(context, "Rescheduled. Reminding in ${if (minutes >= 60) (if (minutes / 60 == 1L) "1 hour" else "${minutes / 60} hours") else (if (minutes == 1L) "1 minute" else "$minutes minutes")}", 1200L)
                     refreshUI()
                 }
             }
@@ -909,7 +909,7 @@ class HomeFragment : Fragment() {
                 savePostponeTime(newPostponeUntil)
                 parentDialog.dismiss()
                 val minutes = durationMs / (60 * 1000)
-                ToastHelper.showCustomToast(context, "Rescheduled. Reminding in ${if (minutes >= 60) "${minutes / 60} hour(s)" else "$minutes minutes"}", 1200L)
+                ToastHelper.showCustomToast(context, "Rescheduled. Reminding in ${if (minutes >= 60) (if (minutes / 60 == 1L) "1 hour" else "${minutes / 60} hours") else (if (minutes == 1L) "1 minute" else "$minutes minutes")}", 1200L)
                 refreshUI()
             }
         }
