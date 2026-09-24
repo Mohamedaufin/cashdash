@@ -99,6 +99,21 @@ class PaymentScreenshotParserTest {
         assertEquals("2026-02-27", dateOf(fields.date))
     }
 
+    @Test fun missingSuccessBannerStillExtractsFields() {
+        // A transaction-details page or a quietly acknowledged transfer never says
+        // "Successful". Extraction used to be vetoed wholesale without a success
+        // word; per policy only an explicit failure message stops extraction now.
+        val fields = PaymentScreenshotParser.parse(listOf(
+            line("UPI Ref No: 390750706142", 1890),
+            line("₹500", 600, 91),
+            line("To: Ragini Jagtap", 430),
+            line("14 Oct 2025, 07:55 PM", 1977)
+        ), 2359)
+        assertEquals("Ragini Jagtap", fields.title)
+        assertEquals(500, fields.amount)
+        assertEquals("2025-10-14", dateOf(fields.date))
+    }
+
     @Test fun failedPaymentIsStillRejected() {
         // The promo filter must not blind the failure check itself: a receipt whose
         // own status line says it failed is not one, banner or no banner.

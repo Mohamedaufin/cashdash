@@ -195,7 +195,7 @@ internal object PaymentScreenshotParser {
         val date = if (merchantApp != null) findDate(lines, imageHeight)
             else findDate(lines.take(detailIndex), imageHeight)
                 ?: findDate(lines.drop(detailIndex), imageHeight)
-        return PaymentFields(true, title, amountMatch?.value, date,
+        return PaymentFields(isPayment, title, amountMatch?.value, date,
             amountMatch?.let { intArrayOf(it.left, it.top, it.width, it.height) },
             amountMatch?.evidence)
     }
