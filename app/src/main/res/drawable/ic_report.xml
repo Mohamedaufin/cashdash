@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Financial Report: a document with a bar chart on it. Replaces the report
+     action's borrowed icons (first a magnifier, then a sheet-with-export-arrow)
+     with the metaphor the feature actually is: an analysis of your data.
+     Bars are punched out with evenOdd so the card background shows through and
+     the glyph stays correct on all three themes when tinted.
+     Drawn in ic_intro_report's language: one weight, flat paths, 48 viewport. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Sheet with cut corner; chart bars punched out (evenOdd holes) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M10,4 H28 L38,14 V44 H10 Z M15,32 H19 V40 H15 Z M22,26 H26 V40 H22 Z M29,20 H33 V40 H29 Z" />
+    <!-- Folded-corner flap -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M28,4 L38,14 H28 Z" />
+</vector>

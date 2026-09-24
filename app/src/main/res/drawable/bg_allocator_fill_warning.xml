@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Spend between 80% and 100% of the limit.
+
+     Amber is the middle step of the budget ladder: green means spend is comfortably
+     inside the limit, red means it is over. Without it the row jumps from calm to
+     alarm with no early signal, which is exactly when the user could still act. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/healthYellow" />
+    <corners android:radius="2dp" />
+</shape>
